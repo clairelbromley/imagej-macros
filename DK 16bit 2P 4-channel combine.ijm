@@ -49,7 +49,7 @@ function combineChannels(file_name, channel_name, channel_number1, channel_numbe
 // get the files
 data_root = getDirectory("Choose a folder containing data...");
 files = getFileList(data_root);
-filtered_files = filterByFileType(files, file_extension);
+
 
 // get the parameters
 Dialog.create("Two-Photon Combiner Looped");
@@ -59,6 +59,7 @@ Dialog.addNumber("Red Channel", 2);
 Dialog.addString("Green Channel Name", "evemNG");
 Dialog.addNumber("Green Channel", 3);
 Dialog.addNumber("Green Channel", 4);
+Dialog.addChoice("File format:", newArray(".oir",".tif"));
 Dialog.addMessage("Please name the output folder:");
 Dialog.addString("File Name", "output");
 Dialog.show();
@@ -68,11 +69,18 @@ red_channel_number2 = Dialog.getNumber();
 green_channel_name = Dialog.getString();
 green_channel_number1 = Dialog.getNumber();
 green_channel_number2 = Dialog.getNumber();
+file_extension = Dialog.getChoice();
 output_folder = Dialog.getString();
 output_path = data_root + File.separator + output_folder;
-File.makeDirectory(output_path);
+
 
 // loop over files, combining channels
+filtered_files = filterByFileType(files, file_extension);
+if (filtered_files.length > 0)
+{
+	File.makeDirectory(output_path);
+}
+
 for (fidx = 0; fidx < filtered_files.length; fidx++)
 {
 	data_path = data_root + File.separator + filtered_files[fidx];
@@ -100,4 +108,11 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	run("Close All");
 }
 
-waitForUser("Congratulations, you are done!"); 
+if (filtered_files.length == 0)
+{
+	waitForUser("No files of the selected format exist in the selected folder!");
+}
+else
+{
+	waitForUser("Congratulations, you are done!"); 
+}
