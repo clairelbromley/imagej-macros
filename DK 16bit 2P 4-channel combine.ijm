@@ -58,17 +58,34 @@ data_root = getDirectory("Choose a folder containing data...");
 files = getFileList(data_root);
 
 
-// get the parameters
-Dialog.create("Two-Photon Combiner Looped");
-Dialog.addString("Red Channel Name", "myomK");
-Dialog.addNumber("Red Channel", 1);
-Dialog.addNumber("Red Channel", 3);
-Dialog.addString("Green Channel Name", "evemNG");
-Dialog.addNumber("Green Channel", 2);
-Dialog.addNumber("Green Channel", 4);
+// get the file-related parameters
+Dialog.create("Looped 2p combiner");
 Dialog.addChoice("File format:", newArray(".oir",".tif"));
 Dialog.addMessage("Please name the output folder:");
 Dialog.addString("File Name", "output");
+Dialog.show();
+file_extension = Dialog.getChoice();
+output_folder = Dialog.getString();
+output_path = data_root + File.separator + output_folder;
+
+// set default channel parameters based on file format
+if (file_extension == ".tif")
+{
+	default_channels = newArray(1, 2, 3, 4);
+}
+else if (file_extension == ".oir")
+{
+	default_channels = newArray(1, 3, 2, 4);
+}
+
+// get the channel-related parameters
+Dialog.create("Channel definitions...")
+Dialog.addString("Red Channel Name", "myomK");
+Dialog.addNumber("Red Channel", default_channels[0]);
+Dialog.addNumber("Red Channel", default_channels[1]);
+Dialog.addString("Green Channel Name", "evemNG");
+Dialog.addNumber("Green Channel", default_channels[2]);
+Dialog.addNumber("Green Channel", default_channels[3]);
 Dialog.show();
 red_channel_name = Dialog.getString();
 red_channel_number1 =  Dialog.getNumber();
@@ -76,10 +93,6 @@ red_channel_number2 = Dialog.getNumber();
 green_channel_name = Dialog.getString();
 green_channel_number1 = Dialog.getNumber();
 green_channel_number2 = Dialog.getNumber();
-file_extension = Dialog.getChoice();
-output_folder = Dialog.getString();
-output_path = data_root + File.separator + output_folder;
-
 
 // loop over files, combining channels
 filtered_files = filterByFileType(files, file_extension);
@@ -98,7 +111,8 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 
 	if (channels == 2)
 	{
-		red_channel_number2 = 2);
+		red_channel_number1 = 1;
+		red_channel_number2 = 2;
 	}
 
 	combineChannels(file_name, red_channel_name, red_channel_number1, red_channel_number2, slices, frames, output_path);
