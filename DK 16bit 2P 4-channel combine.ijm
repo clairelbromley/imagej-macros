@@ -46,11 +46,12 @@ function combineChannels(file_name, channel_name, channel_number1, channel_numbe
 	saveAs("tiff", out_path + File.separator + file_name + " - " + channel_name);
 }
 
+// get the files
 data_root = getDirectory("Choose a folder containing data...");
 files = getFileList(data_root);
 filtered_files = filterByFileType(files, file_extension);
-data_path = data_root + File.separator + filtered_files[0];
 
+// get the parameters
 Dialog.create("Two-Photon Combiner Looped");
 Dialog.addString("Red Channel Name", "myomK");
 Dialog.addNumber("Red Channel", 1);
@@ -71,6 +72,7 @@ output_folder = Dialog.getString();
 output_path = data_root + File.separator + output_folder;
 File.makeDirectory(output_path);
 
+// loop over files, combining channels
 for (fidx = 0; fidx < filtered_files.length; fidx++)
 {
 	data_path = data_root + File.separator + filtered_files[fidx];
@@ -80,19 +82,21 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	getDimensions(w, h, channels, slices, frames);
 
 	combineChannels(file_name, red_channel_name, red_channel_number1, red_channel_number2, slices, frames, output_path);
-	combineChannels(file_name, green_channel_name, green_channel_number1, green_channel_number2, slices, frames, output_path);
+	if (channels > 2)
+	{
+		combineChannels(file_name, green_channel_name, green_channel_number1, green_channel_number2, slices, frames, output_path);
+		run("Merge Channels...", "c1=" + red_channel_name + " c2=" + green_channel_name + " create");
+		if (slices > 1)
+		{
+			selectWindow("Composite");
+		}
+		else if (frames > 1)
+		{
+			selectWindow("Merged");
+		}
+		saveAs("tiff", output_path + File.separator + file_name +"_merged");
+	}
 
-	run("Merge Channels...", "c1=" + red_channel_name + " c2=" + green_channel_name + " create");
-	if (slices > 1)
-	{
-		selectWindow("Composite");
-	}
-	else if (frames > 1)
-	{
-		selectWindow("Merged");
-	}
-	saveAs("tiff", output_path + File.separator + file_name +"_merged");
-	
 	run("Close All");
 }
 
