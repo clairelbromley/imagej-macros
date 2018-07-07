@@ -36,9 +36,16 @@ function combineChannels(file_name, channel_name, channel_number1, channel_numbe
 	selectWindow(file_name);
 	run("Make Substack...", "channels=" + channel_number2 + " slices=1-" + slices + " frames=1-" + frames + "");
 	rename("channel" + channel_number2);
-	imageCalculator("Add create stack", "channel"+channel_number1, "channel"+channel_number2);
+	imageCalculator("Add create stack", "channel" + channel_number1, "channel" + channel_number2);
 	run("Grays");
-	Stack.getStatistics(area, mean, min, max);
+	if ((frames > 1) || (slices > 1))
+	{
+		Stack.getStatistics(area, mean, min, max);
+	}
+	else
+	{
+		getStatistics(area, mean, min, max);
+	}
 	setMinAndMax(min, max);
 	run("16-bit");
 	rename(channel_name);
@@ -55,9 +62,9 @@ files = getFileList(data_root);
 Dialog.create("Two-Photon Combiner Looped");
 Dialog.addString("Red Channel Name", "myomK");
 Dialog.addNumber("Red Channel", 1);
-Dialog.addNumber("Red Channel", 2);
+Dialog.addNumber("Red Channel", 3);
 Dialog.addString("Green Channel Name", "evemNG");
-Dialog.addNumber("Green Channel", 3);
+Dialog.addNumber("Green Channel", 2);
 Dialog.addNumber("Green Channel", 4);
 Dialog.addChoice("File format:", newArray(".oir",".tif"));
 Dialog.addMessage("Please name the output folder:");
@@ -88,6 +95,11 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	file_name = getInfo("image.filename");
 	selectWindow(file_name); 
 	getDimensions(w, h, channels, slices, frames);
+
+	if (channels == 2)
+	{
+		red_channel_number2 = 2);
+	}
 
 	combineChannels(file_name, red_channel_name, red_channel_number1, red_channel_number2, slices, frames, output_path);
 	if (channels > 2)
