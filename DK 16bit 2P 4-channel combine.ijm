@@ -24,6 +24,8 @@ function filterByFileType(files, extension){
 function combineChannels(file_name, channel_name, channel_number1, channel_number2, slices, frames, out_path)
 {
 	// sum channels into a single stack
+	file_string = split(file_name, ".");
+	file_string = file_string[0];
 	print("filename = " + file_name);
 	print("channel_name = " + channel_name);
 	print("channel_number1 = " + channel_number1);
@@ -50,7 +52,7 @@ function combineChannels(file_name, channel_name, channel_number1, channel_numbe
 	run("16-bit");
 	rename(channel_name);
 	run("Duplicate...", "duplicate");
-	saveAs("tiff", out_path + File.separator + file_name + " - " + channel_name);
+	saveAs("tiff", out_path + File.separator + file_string + " - " + channel_name);
 }
 
 // get the files
@@ -104,6 +106,10 @@ if (filtered_files.length > 0)
 for (fidx = 0; fidx < filtered_files.length; fidx++)
 {
 	data_path = data_root + File.separator + filtered_files[fidx];
+	subfolder_name = split(filtered_files[fidx], ".");
+	subfolder_name = subfolder_name[0];
+	output_subfolder = output_path + File.separator + subfolder_name;
+	File.makeDirectory(output_subfolder);
 	run("Bio-Formats", "open=[" + data_path + "]autoscale color_mode=Default stack_order=" + toUpperCase(stack_order));
 	file_name = getInfo("image.filename");
 	selectWindow(file_name); 
@@ -115,10 +121,11 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 		red_channel_number2 = 2;
 	}
 
-	combineChannels(file_name, red_channel_name, red_channel_number1, red_channel_number2, slices, frames, output_path);
+	combineChannels(file_name, red_channel_name, red_channel_number1, red_channel_number2, slices, frames, output_subfolder);
+	
 	if (channels > 2)
 	{
-		combineChannels(file_name, green_channel_name, green_channel_number1, green_channel_number2, slices, frames, output_path);
+		combineChannels(file_name, green_channel_name, green_channel_number1, green_channel_number2, slices, frames, output_subfolder);
 		run("Merge Channels...", "c1=" + red_channel_name + " c2=" + green_channel_name + " create");
 		if (slices > 1)
 		{
@@ -128,7 +135,7 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 		{
 			selectWindow("Merged");
 		}
-		saveAs("tiff", output_path + File.separator + file_name +"_merged");
+		saveAs("tiff", output_subfolder + File.separator + subfolder_name +"_merged");
 	}
 
 	run("Close All");
