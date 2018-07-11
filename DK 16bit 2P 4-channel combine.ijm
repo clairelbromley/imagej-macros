@@ -126,16 +126,27 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	if (channels > 2)
 	{
 		combineChannels(file_name, green_channel_name, green_channel_number1, green_channel_number2, slices, frames, output_subfolder);
-		run("Merge Channels...", "c1=" + red_channel_name + " c2=" + green_channel_name + " create");
-		if (slices > 1)
+		selectWindow(green_channel_name);
+		// no idea why this triple repeat is necessary, seems ridiculous:
+		run("Merge Channels...", "c1=" + red_channel_name + " c2=" + green_channel_name + " create keep");
+		run("Merge Channels...", "c1=" + red_channel_name + " c2=" + green_channel_name + " create keep");
+		run("Merge Channels...", "c1=" + red_channel_name + " c2=" + green_channel_name + " create keep");
+		if (isOpen("Merged"))
+		{
+			selectWindow("Merged");	
+		}
+		if (isOpen("Composite"))
 		{
 			selectWindow("Composite");
 		}
-		else if (frames > 1)
+		if (isOpen("Merged") | isOpen("Composite"))
 		{
-			selectWindow("Merged");
+			saveAs("tiff", output_subfolder + File.separator + subfolder_name +"_merged");
 		}
-		saveAs("tiff", output_subfolder + File.separator + subfolder_name +"_merged");
+		else
+		{
+			print("WARNING: no merged file saved for input file " + file_name + "!");
+		}
 	}
 
 	run("Close All");
