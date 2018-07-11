@@ -6,8 +6,7 @@
 setOption("ExpandableArrays", true);
 
 // user parameters
-stack_order = "xyctz";
-file_extension = ".tif";
+//stack_order = "xyctz";
 
 function filterByFileType(files, extension){
 	// filter file array according to file extension
@@ -110,7 +109,7 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	subfolder_name = subfolder_name[0];
 	output_subfolder = output_path + File.separator + subfolder_name;
 	File.makeDirectory(output_subfolder);
-	run("Bio-Formats", "open=[" + data_path + "]autoscale color_mode=Default stack_order=" + toUpperCase(stack_order));
+	run("Bio-Formats", "open=[" + data_path + "]autoscale color_mode=Default");
 	file_name = getInfo("image.filename");
 	selectWindow(file_name); 
 	getDimensions(w, h, channels, slices, frames);
