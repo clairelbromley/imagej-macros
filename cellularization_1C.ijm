@@ -24,29 +24,31 @@ t_step = Dialog.getString();
 getPixelSize(unit, pixelWidth, pixelHeight);
 
 // Create folder
-newFolder = Date_Id + "_" + S_N + "_" + G_Ch;
+newFolder = "analysis" + Analysis_iteration + "_" + Exp_number + "_" + E_number + "_" + Ch;
+// ** work out if can put in dialogue to warn if going to overwrite previous folder
 newPath = path + newFolder
 File.makeDirectory(newPath);
 
 //Combined channels
 selectWindow(fileName); 
-run("Duplicate...", "title=G1 duplicate channels=1");
-selectWindow(fileName); 
-run("Duplicate...", "title=G2 duplicate channels=2");
-imageCalculator("Add create stack", "G1","G2");
+// **add function enabling adding together of stacks to occur only when there are two channels i.e. not processed**
+//run("Duplicate...", "title=G1 duplicate channels=1");
+//selectWindow(fileName); 
+//run("Duplicate...", "title=G2 duplicate channels=2");
+//imageCalculator("Add create stack", "G1","G2");
 run("Grays");
 Stack.getStatistics(area, mean, min, max);
 setMinAndMax(min, max);
 run("8-bit");
-newName = G_Ch + "_ch_fused";
-saveAs("tiff", newPath + "/" + newName);
+newName = Ch + "_initial_input";
+saveAs("tiff", newPath + File.separator + newName);
 rename(newName);
-selectWindow("G1");
-close();
-selectWindow("G2");
-close();
-selectWindow(fileName); 
-close();
+//selectWindow("G1");
+//close();
+//selectWindow("G2");
+//close();
+//selectWindow(fileName); 
+//close();
 
 // Preprocessing + make kymograph
 selectWindow(newName); 
