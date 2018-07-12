@@ -6,13 +6,15 @@ path = getDirectory("image");
 
 //Creating a user interface using "Dialog"
 Dialog.create("File Identifier");
-Dialog.addString("Green Channel", "sqhGFP");
-Dialog.addString("Date/Identifier", "20150601");
-Dialog.addString("Serieal number", "01");
+Dialog.addString("Exp number", "Exp");
+Dialog.addString("Embryo number", "E");
+Dialog.addString("Analysis iteration", "01");
+Dialog.addString("Channel", "myomK");
 Dialog.show();
-G_Ch	= Dialog.getString();
-Date_Id	= Dialog.getString();
-S_N 	= Dialog.getString();
+Exp_number	= Dialog.getString();
+E_number	= Dialog.getString();
+Analysis_iteration 	= Dialog.getString();
+Ch	= Dialog.getString();
 
 // Imaging parameters
 Dialog.create("Get frame rate");
