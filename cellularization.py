@@ -104,8 +104,8 @@ ax = plt.plot(DF_edge_max['time'],DF_edge_max['position'], '.', xp, p(xp), '-')
 
 plt.subplot(326)
 opt_parameters, pcov = opt.curve_fit(fitted_func, 
-				DF_edge_max[‘time’], 
-				DF_edge_max[‘position’])
+				DF_edge_max['time'], 
+				DF_edge_max['position'])
 tp = np.linspace(0, time_end, 1000)
 ax = plt.plot(DF_edge_max['time'],DF_edge_max['position'], '.', 
 		tp, fitted_func(tp, *opt_parameters), '-')
@@ -117,14 +117,14 @@ DF_edge_max['position_scaled'] = DF_edge_max['position'] * float(pixel_size)
 time_end_scaled = time_end * float(t_step_size) 
 
 plt.figure()
-plt.subplot(121)
+plt.subplot(131)
 z = np.polyfit(DF_edge_max['time_scaled'], DF_edge_max['position_scaled'], 3)
 print(z)
 p = np.poly1d(z)
 xp = np.linspace(0, time_end_scaled, 1000)
 ax = plt.plot(DF_edge_max['time_scaled'],DF_edge_max['position_scaled'], '.', xp, p(xp), '-')
 
-plt.subplot(122)
+plt.subplot(132)
 p2 = np.polyder(p)
 print(p2)
 xpxp = np.linspace(0, time_end_scaled, 1000)
@@ -141,20 +141,19 @@ DF_v_t = pd.DataFrame({'timeframe': np.arange(1, time_end + 1 , 1),
 os.chdir(path) 
 DF_v_t.to_excel('time_velocity.xlsx')   
 
-“””
 plt.figure()
-plt.subplot(121)
+plt.subplot(133)
 real_opt_parameters, pcov = opt.curve_fit(fitted_func, 
 				DF_edge_max['time_scaled'], 								DF_edge_max['position_scaled'])
 tp = np.linspace(0, time_end_scaled, 1000);
 ax = plt.plot(DF_edge_max['time_scaled'],DF_edge_max['position_scaled'], '.',
-		tp, fitted_func(tp, *real_opt_parameters), ‘-‘)
+		tp, fitted_func(tp, *real_opt_parameters), '-')
 
 plt.subplot(122)
 ax = plt.plot(tp, derivative_fitted_func(tp, real_opt_parameters.b, 
-					real_opt_parameters.tau, ‘-‘))
+					real_opt_parameters.tau, '-'))
 
-DF_edge_max['velocity'] = derivative_fitted_func(DF_edge_max['time_scaled’], 
+DF_edge_max['velocity'] = derivative_fitted_func(DF_edge_max['time_scaled'], 
 						real_opt_parameters.b, 
 						real_opt_parameters.tau)
 DF_v_t = pd.DataFrame({'timeframe': np.arange(1, time_end + 1 , 1),
@@ -162,9 +161,7 @@ DF_v_t = pd.DataFrame({'timeframe': np.arange(1, time_end + 1 , 1),
                       'velocity': derivative_fitted_func(np.arange(float(t_step_size), time_end_scaled + float(t_step_size), float(t_step_size)), real_opt_parameters.b, real_opt_parameters.tau)})
 
 os.chdir(path) 
-DF_v_t.to_excel('time_velocity.xlsx')   
-“””
-
+DF_v_t.to_excel('time_velocity_expo.xlsx')   
 
 
 
