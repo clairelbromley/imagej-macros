@@ -116,33 +116,33 @@ DF_edge_max['time_scaled'] = DF_edge_max['time'] * float(t_step_size)
 DF_edge_max['position_scaled'] = DF_edge_max['position'] * float(pixel_size) 
 time_end_scaled = time_end * float(t_step_size) 
 
+#plt.figure()
+#plt.subplot(121)
+#z = np.polyfit(DF_edge_max['time_scaled'], DF_edge_max['position_scaled'], 3)
+#print(z)
+#p = np.poly1d(z)
+#xp = np.linspace(0, time_end_scaled, 1000)
+#ax = plt.plot(DF_edge_max['time_scaled'],DF_edge_max['position_scaled'], '.', xp, p(xp), '-')
+#
+#plt.subplot(122)
+#p2 = np.polyder(p)
+#print(p2)
+#xpxp = np.linspace(0, time_end_scaled, 1000)
+#ax = plt.plot(xpxp, p2(xpxp), '-')
+#Derivative = p2(xpxp)
+#print(Derivative)
+#
+#
+#DF_edge_max['velocity'] = p2(DF_edge_max['time_scaled'])
+#DF_v_t = pd.DataFrame({'timeframe': np.arange(1, time_end + 1 , 1),
+#                      'actual_time': np.arange(float(t_step_size), time_end_scaled + float(t_step_size), float(t_step_size)),
+#                      'velocity': p2(np.arange(float(t_step_size), time_end_scaled + float(t_step_size), float(t_step_size)))})
+#
+#os.chdir(path) 
+#DF_v_t.to_excel('time_velocity.xlsx')   
+
 plt.figure()
-plt.subplot(131)
-z = np.polyfit(DF_edge_max['time_scaled'], DF_edge_max['position_scaled'], 3)
-print(z)
-p = np.poly1d(z)
-xp = np.linspace(0, time_end_scaled, 1000)
-ax = plt.plot(DF_edge_max['time_scaled'],DF_edge_max['position_scaled'], '.', xp, p(xp), '-')
-
-plt.subplot(132)
-p2 = np.polyder(p)
-print(p2)
-xpxp = np.linspace(0, time_end_scaled, 1000)
-ax = plt.plot(xpxp, p2(xpxp), '-')
-Derivative = p2(xpxp)
-print(Derivative)
-
-
-DF_edge_max['velocity'] = p2(DF_edge_max['time_scaled'])
-DF_v_t = pd.DataFrame({'timeframe': np.arange(1, time_end + 1 , 1),
-                      'actual_time': np.arange(float(t_step_size), time_end_scaled + float(t_step_size), float(t_step_size)),
-                      'velocity': p2(np.arange(float(t_step_size), time_end_scaled + float(t_step_size), float(t_step_size)))})
-
-os.chdir(path) 
-DF_v_t.to_excel('time_velocity.xlsx')   
-
-plt.figure()
-plt.subplot(133)
+plt.subplot(121)
 real_opt_parameters, pcov = opt.curve_fit(fitted_func, 
 				DF_edge_max['time_scaled'], 								DF_edge_max['position_scaled'])
 tp = np.linspace(0, time_end_scaled, 1000);
