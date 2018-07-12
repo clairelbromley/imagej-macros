@@ -58,32 +58,50 @@ getLine(x1, y1, x2, y2, lineWidth);
 Dialog.create("Analysis end point");
 Dialog.addNumber("Final t frame", 0);
 Dialog.show();
-fin_t	= Dialog.getNumber();
-print(fin_t);
+final_t	= Dialog.getNumber();
+print(final_t);
 
 selectWindow(newName); 
-run("Multi Kymograph", "linewidth=1");
-rename("raw kymograph");
-saveAs("tiff", newPath + File.separator + fileName + " kymograph raw");
+run("Multi Kymograph", "linewidth=1"); //creates files called "Kymograph"
+run("Duplicate...", "title=Kymo_raw"); //now have two windows called "Kymograph" and "Kymo_raw"
+saveAs("tiff", newPath + File.separator + "Kymo_raw");
+run("Duplicate...", "title=Kymo_processmethod_1");
+run("Duplicate...", "title=Kymo_processmethod_2");
+selectWindow("Kymo_processmethod_1");
 run("Gaussian Blur...", "sigma=3 stack"); // preprocess kymograph
+saveAs("tiff", newPath + File.separator + "Kymo_processmethod_1");
 run("Duplicate...", "title=Kymo_seg");
+run("Duplicate...", "title=Kymo_seg2");
 setAutoThreshold("Otsu dark");
+run("Duplicate...", "title=otsudark_threshold");
+saveAs("tiff", newPath + File.separator + "threshold");
+close();
+waitForUser("check folder")
+selectWindow("Kymo_seg");
+run("8-bit");
+run("Auto Local Threshold", "method=[Try all] radius=15 parameter_1=0 parameter_2=0 white");
+saveAs("tiff", newPath + File.separator + "montage");
+close();
+waitForUser("test")
+selectWindow("Kymo_seg2");
 run("Make Binary");
+saveAs("tiff", newPath + File.separator + "binary");
 run("Outline");
+saveAs("tiff", newPath + File.separator + "outline");
+
 
 width = getWidth();
 height = getHeight();
-makeRectangle(0, 1, width, fin_t);
+makeRectangle(0, 1, width, final_t);
 run("Colors...", "foreground=black background=white selection=cyan");
 run("Clear Outside");
 run("Select None");
 waitForUser("Use magic wand to select basal margin, then click OK");
 run("Clear Outside");
-
-selectWindow("Kymograph");
+selectWindow("Kymo_processmethod_1.tif");
 run("8-bit");
-run("Merge Channels...", "c1=Kymo_seg c4=Kymograph create keep ignore");
-saveAs("tiff", newPath + "/Merged");
+run("Merge Channels...", "c1=Kymo_seg c4=Kymo_processmethod_1.tif create keep ignore");
+saveAs("tiff", newPath + "/Merged_process1");
 selectWindow("Kymo_seg");
 saveAs("tiff", newPath + "/cellu_front_y_t");
 close();
