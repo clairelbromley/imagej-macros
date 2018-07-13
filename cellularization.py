@@ -13,12 +13,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import scipy.optimize as opt
+import math 
 
 def fitted_func(t, a, b, tau):
-	return (a - b * exp(-t / tau))
+	return (a - b * math.exp(-t / tau))
 
 def derivative_fitted_func(t, b, tau):
-	return ( (b / tau) * exp(-t/ tau))
+	return ( (b / tau) * math.exp(-t/ tau))
 
 Folder = '20150601_01_sqhGFP'
 
