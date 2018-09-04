@@ -56,6 +56,10 @@ function combineChannels(file_name, channel_name, channel_number1, channel_numbe
 
 // get the files
 data_root = getDirectory("Choose a folder containing data...");
+if (!endsWith(data_root, File.separator))
+{
+	data_root = data_root + File.separator;
+}
 files = getFileList(data_root);
 
 
@@ -67,7 +71,7 @@ Dialog.addString("File Name", "output");
 Dialog.show();
 file_extension = Dialog.getChoice();
 output_folder = Dialog.getString();
-output_path = data_root + File.separator + output_folder;
+output_path = data_root + output_folder;
 
 // set default channel parameters based on file format
 if (file_extension == ".tif")
@@ -104,11 +108,12 @@ if (filtered_files.length > 0)
 
 for (fidx = 0; fidx < filtered_files.length; fidx++)
 {
-	data_path = data_root + File.separator + filtered_files[fidx];
+	data_path = data_root + filtered_files[fidx];
 	subfolder_name = split(filtered_files[fidx], ".");
 	subfolder_name = subfolder_name[0];
 	output_subfolder = output_path + File.separator + subfolder_name;
 	File.makeDirectory(output_subfolder);
+	print(data_path);
 	run("Bio-Formats", "open=[" + data_path + "]autoscale color_mode=Default");
 	file_name = getInfo("image.filename");
 	selectWindow(file_name); 
