@@ -136,7 +136,15 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	Stack.setPosition(0, 0, 0);
 	setTool("rectangle");
 	waitForUser("Select spatial region to crop and click OK. ");
-	run("Crop");
+	getDimensions(w, h, channels, slices, frames);
+	print(w, h, channels, slices, frames);
+	end_frames = frames;
+	getSelectionBounds(x0, y0, width, height); 
+	xi = x0+width;
+	print(x0, xi);
+	yi = y0 + height;
+	print(y0, yi);
+    run("TransformJ Crop", "x-range=" + x0 + "," + xi + " y-range=" + y0 + "," + yi + " t-range=1," + end_frames + " c-range=1,2");  
 
 	// rename window and save to output folder
 	image_name = split(file_name, '.');
