@@ -27,20 +27,35 @@ function filterByFileType(files, extension)
 	return filtered;
 }
 
-// calculate median value of an input array
-function calculateMedian(arr)
+// calculate prc percentile of input array arr
+function calculatePercentile(arr, prc)
 {
-	arr = Array.sort(arr);
-	half_idx = arr.length/2 - 1; //-1 as indexed from zero
-	if (half_idx == floor(half_idx))
+	if (prc > 100)
 	{
-		median = (arr[half_idx] + arr[half_idx + 1])/2;
+		exit("Percentile should be either in % or as a fraction, not > 100!");
+	}
+	if (prc > 1)
+	{
+		prc = prc / 100;
+	}
+	arr = Array.sort(arr);
+	split_idx = arr.length * prc + 0.5 - 1; //-1 as indexed from zero
+	if (split_idx == floor(split_idx))
+	{
+		npc_percentile = arr[split_idx];
 	}
 	else
 	{
-		median = arr[half_idx + 1];
+		k = floor(split_idx);
+		f = split_idx - floor(split_idx);
+		// calculate percentile according to 
+		// https://web.stanford.edu/class/archive/anthsci/anthsci192/anthsci192.1064/handouts/calculating%20percentiles.pdf
+		//npc_percentile = (1 - f) * arr[k] + f * arr[k+1];
+
+		// calculate excel-style percentile...
+		npc_percentile = arr[k] + (arr[k+1] - arr[k]) * (1 - prc);
 	}
-	return median;
+	return npc_percentile;
 }
 
 // prompt for user to draw membrane, returning profile from which to get intensity stats
@@ -166,6 +181,7 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	maxs_halfP = newArray(frames);
 	medians_halfP = newArray(frames);
 	ratio_halfP = newArray(frames);
+	ratio_percentiles_halfP = newArray(frames);
 	
 	for (fridx = 1; fridx < frames + 1; fridx++)
 	{
@@ -177,16 +193,17 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 		stdDevs[fridx - 1] = stdDev;
 		mins[fridx - 1] = min;
 		maxs[fridx - 1] = max;
-		medians[fridx - 1] = calculateMedian(profile);
+		medians[fridx - 1] = calculatePercentile(profile, 50);
 		Array.getStatistics(halfprofile, min, max, mean, stdDev);
 		means_halfP[fridx - 1] = mean;
 		stdDevs_halfP[fridx - 1] = stdDev;
 		mins_halfP[fridx - 1] = min;
 		maxs_halfP[fridx - 1] = max;
-		medians_halfP[fridx - 1] = calculateMedian(halfprofile);
+		medians_halfP[fridx - 1] = calculatePercentile(halfprofile, 50);
 		// ratio increases with puncta, and accounts for photobleaching. 
 		//95th percentile over median would be less susceptible to hot pixels
 		ratio_halfP[fridx - 1] = max/mean;
+		ratio_percentiles_halfP[fridx - 1] = calculatePercentile(halfprofile, 95)/medians_halfP[fridx - 1];
 	}
 
 	// print stats to results screen and save as csv
@@ -206,6 +223,7 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 		setResult("Min I - half profile", fridx, mins_halfP[fridx]);
 		setResult("Max I - half profile", fridx, maxs_halfP[fridx]);
 		setResult("Ratio max/mean - half profile", fridx, ratio_halfP[fridx]);
+		setResult("Ratio 95th percentile/median - half profile", fridx, ratio_percentiles_halfP[fridx]);
 	}
 	saveAs("Measurements", output_subfolder + File.separator + "Membrane intensity stats against time.csv");
 	run("Close All");
