@@ -211,7 +211,8 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	//fridx = frame index
 	for (fridx = 0; fridx < frames; fridx++)
 	{
-		setResult("Frame", fridx, fridx + 1);
+		setResult("Frame", fridx, fridx + start_frame); 
+		setResult("Cropped and trimmed frame", fridx, fridx + 1);
 		setResult("Mean I", fridx, means[fridx]);
 		setResult("Median I", fridx, medians[fridx]);
 		setResult("StdDev I", fridx, stdDevs[fridx]);
