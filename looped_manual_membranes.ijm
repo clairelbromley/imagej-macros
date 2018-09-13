@@ -1,17 +1,19 @@
 // Created by Bromley C.L., Kelly D.J.
-// contact: dougkelly88@gmail.com
 
 // loop over files in a folder, trimming and cropping and getting MANUAL membranes from user input, saving
 // statistics from membrane line profiles as well as modified images, line profile X, Y and intensity. 
 
 // semi-permanent user parameters
 file_extension = ".tif";
-line_width = 10; //l<-- add desired number of pixels for line width
+line_width = 5; //<-- add desired number of pixels for line width
 draw_ch = 1; // channel to draw membranes in. Count from 1. 
 analyse_ch = 2; // channel to get intensity profiles from. Count from 1. 
 
 //means can add things to array without needing to decide array length at the start
 setOption("ExpandableArrays", true);
+
+//..............................................................................................................
+// ***** FUNCTIONS
 
 // filterByFileType copied from DK 16bit 2P 4-channel combine.ijm --> searching for chosen file type within selected folder
 function filterByFileType(files, extension)
@@ -88,7 +90,6 @@ function lineProfile(output_path, frame, channel_to_draw_in, channel_to_analyse)
 	updateResults();
 	saveAs("Measurements", output_path + File.separator + "Line profile, frame = " + frame + ".csv");
 	run("Clear Results");
-	
 // added ADDITIONAL LOOP
 	for (idx = 0; idx < floor(profile.length/2); idx++)
 	// if always draw lines in same direction, idx=0 is where start drawing. for ((START VALUE) idx = 0; (END VALUE) idx < profile.length/2; (MEANS WILL INCREASE BY ONE) idx++)
@@ -104,6 +105,9 @@ function lineProfile(output_path, frame, channel_to_draw_in, channel_to_analyse)
 
 	return profile;
 }
+
+//..............................................................................................................
+// ***** MAIN SCRIPT
 
 // get the files and filter by extension, and set up output folder
 data_root = getDirectory("Choose a folder containing data...");
@@ -166,6 +170,8 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	image_name = image_name[0] + " trimmed and cropped";
 	rename(image_name);
 	saveAs("tiff", output_subfolder + File.separator + image_name);
+
+	//set apical bounds
 
 	// loop over frames in sequence, saving line profiles and storing intensity stats
 	run("Enhance Contrast", "saturated=0.35");
