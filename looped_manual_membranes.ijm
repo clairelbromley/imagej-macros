@@ -168,6 +168,9 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	File.makeDirectory(output_subfolder);
 	run("Bio-Formats", "open=[" + data_path + "]autoscale color_mode=Default");
 	file_name = getInfo("image.filename");
+	image_name = split(file_name, ".");
+	file_extension = image_name[1];
+	image_name = image_name[0];
 	selectWindow(file_name); 
 	getDimensions(w, h, channels, slices, frames);
 	Stack.setDisplayMode("color");
