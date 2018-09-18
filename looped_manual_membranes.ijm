@@ -15,6 +15,37 @@ setOption("ExpandableArrays", true);
 //..............................................................................................................
 // ***** FUNCTIONS
 
+// 2d array support
+// create empty nrows x ncolumns array
+function createEmptyArray(nrows, ncolumns)
+{
+	return newArray(nrows * ncolumns);
+}
+
+// set an individual value at position x, y; 0-indexed
+function setArrayValue(inputArray, nrows, ncolumns, x, y, value)
+{
+	inputArray[x + ncolumns * y] = value;
+	return inputArray;
+}
+
+// set a row of values at y
+function setArrayRow(inputArray, nrows, ncolumns, y, rowArray)
+{
+	// error handling for if size(rowArray) =/= ncolumns?
+	for (xidx == 0; xidx < ncolumns; xidx++)
+	{
+		inputArray[xidx + ncolumns * y] = rowArray[xidx]
+	}
+	return inputArray;
+}
+
+// get a row of values at y
+function getArrayRow(inputArray, nrows, ncolumns, y)
+{
+	return Array.slice(inputArray,ncolumns * y,ncolumns * (y+1))
+}
+
 // filterByFileType copied from DK 16bit 2P 4-channel combine.ijm --> searching for chosen file type within selected folder
 function filterByFileType(files, extension)
 {
