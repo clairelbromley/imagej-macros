@@ -173,10 +173,28 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	image_name = image_name[0];
 	selectWindow(file_name); 
 	getDimensions(w, h, channels, slices, frames);
-	Stack.setDisplayMode("color");
+
+	// rotation step
+	run("Enhance Contrast", "saturated=0.35");
+	angleZ = 1;
+	while ((angleZ % 90) > 0)
+	{
+		Dialog.create("Define rotation angle - increments of 90. Apical at top");
+		Dialog.addNumber("Rotation angle",0);
+		Dialog.show();
+		angleZ = Dialog.getNumber();
+	}
+	if (angleZ > 1)
+	{
+		run("TransformJ Turn", "z-angle="+angleZ+" y-angle=0 x-angle=0");
+		rename(file_name);
+		close("\\Others");
+	}
+	//using turn as only doing in multiples of 90, so this makes it computationally more efficient
 
 	// trim time series...
 	run("Enhance Contrast", "saturated=0.35");
+    Stack.setDisplayMode("color");
 	waitForUser("Scroll to the first frame of the period of interest and click OK");
 	Stack.getPosition(channel, slice, start_frame);
 	waitForUser("Scroll to the last frame of the period of interest and click OK");
