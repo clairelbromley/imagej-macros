@@ -202,6 +202,147 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	run("Make Substack...", "channels=1-" + channels + " frames=" + start_frame + "-" + end_frame);
 	close("\\Others");
 	
+// create images to process and find bounds for
+	getDimensions(w, h, channels, slices, frames);
+	run("Duplicate...", "title=duplicate duplicate channels=1-" + channels + " frames=1-" + frames);
+	run("Split Channels");	
+	selectWindow("C1-duplicate");
+	saveAs("Tiff", output_subfolder + File.separator + "apical_bound");
+	selectWindow("C2-duplicate");
+	saveAs("Tiff", output_subfolder + File.separator + "basal_bound");
+	
+	//set basal bounds 
+	// aim for this is to get a lower basal position that allows setting of the basal margin automatically - removing user bias
+	selectWindow("basal_bound.tif");
+	run("8-bit");
+	run("Gaussian Blur...", "sigma=3");
+	getDimensions(w, h, channels, slices, frames);
+	for (fridx = 0; fridx < frames +1; fridx++){
+		Stack.setPosition(0, 0, fridx);
+		setAutoThreshold("Otsu dark");
+		//setOption("BlackBackground", false);
+		run("Convert to Mask", "method=Default background=Dark only");
+	}
+	run("Despeckle", "stack");
+//set this up so convolve is in separate editable function
+	//run("Convolve...", "text1=[0 0 0 0 0 0 0\n1 1 1 1 1 1 1 \n0 0 0 0 0 0 0] stack");
+	run("Convolve...", "text1=1.01563E-06\0111.36742E-05\0110.00012341\0110.000746586\0110.003027555\0110.008229747\0110.014995577\0110.018315639\0110.014995577\0110.008229747\0110.003027555\0110.000746586\0110.00012341\0111.36742E-05\0111.01563E-06\n2.03995E-05\0110.000274654\0110.002478752\0110.014995577\0110.060810063\0110.165298888\0110.301194212\0110.367879441\0110.301194212\0110.165298888\0110.060810063\0110.014995577\0110.002478752\0110.000274654\0112.03995E-05\n5.54516E-05\0110.000746586\0110.006737947\0110.040762204\0110.165298888\0110.449328964\0110.818730753\0111\0110.818730753\0110.449328964\0110.165298888\0110.040762204\0110.006737947\0110.000746586\0115.54516E-05\n2.03995E-05\0110.000274654\0110.002478752\0110.014995577\0110.060810063\0110.165298888\0110.301194212\0110.367879441\0110.301194212\0110.165298888\0110.060810063\0110.014995577\0110.002478752\0110.000274654\0112.03995E-05\n1.01563E-06\0111.36742E-05\0110.00012341\0110.000746586\0110.003027555\0110.008229747\0110.014995577\0110.018315639\0110.014995577\0110.008229747\0110.003027555\0110.000746586\0110.00012341\0111.36742E-05\0111.01563E-06 stack");
+
+	// for first frame...
+	// imagej macro doesn't support 2d arrays :o to store edge coordinates across multiple timepoints, need to 
+	// make own indexing system...
+	edgesArray = createEmptyArray(frames, w);
+	// works ok if contiguous and without noise - probably ok assumption because of good signal from basal myosin in first frame
+	getDimensions(w, h, channels, slices, frames);
+	for (fridx = 0; fridx < frames + 1; fridx++)
+	{
+		if (fridx == 0)
+		{
+			previous_edge = newArray(w);
+			for (xidx = 0; xidx < w; xidx++)
+			{
+				yidx = h - 1;
+				pix_val = getPixel(xidx, yidx);
+				while (pix_val==0)
+				{
+					yidx--;
+					pix_val = getPixel(xidx, yidx);
+				}
+				previous_edge[xidx] = yidx;
+			}
+			edgesArray = setArrayRow(edgesArray, frames, w, fridx, previous_edge);
+		} 
+		else 
+		{
+			// confine search for edge to region of search_range (10 pixels?) either side of last frame's edge
+			// if no edge is found in that region, must be a hole in the binary image. assign a dummy value and deal with in second loop
+			new_edge = newArray(w);
+			
+			search_range = 10;
+			for (xidx = 0; xidx < w; xidx++)
+			{
+				yidx = previous_edge[xidx] + search_range;
+				pix_val = getPixel(xidx, yidx);
+				while ((pix_val==0) && (yidx > previous_edge[xidx] - search_range))
+				{
+					yidx--;
+					pix_val = getPixel(xidx, yidx);
+				}
+				if (pix_val==0)
+				{
+					new_edge[xidx] = -1;
+				}
+				else
+				{
+					new_edge[xidx] = yidx;
+				}
+			}
+			
+			// deal with pixels we've marked out as not having data
+			for (xidx = 0; xidx < w; xidx++)
+			{
+				// if first position along edge is anomalous, take the value from the previous frame's edge as a reasonable approximation
+				if ((xidx == 0) && (new_edge[xidx] == -1))
+				{
+					new_edge[xidx] = previous_edge[xidx];
+				}
+				// if subsequent positions are anomalous, interpolate between previous successful edge position and next successful edge position
+				if (new_edge[xidx] == -1)
+				{
+					x1 = xidx - 1;
+					y1 = new_edge[xidx - 1];
+			
+					// find next successful edge position
+					sub_xidx = xidx + 1;
+					while ((sub_xidx < w) && new_edge[sub_xidx] == -1)
+					{
+						sub_xidx++;
+					}
+					
+			
+					// deal with case when no further good edges positions exist - just continue edge at last
+					// good y position to end of image in x direction
+					if (sub_xidx == w)
+					{
+						for (subsub_xidx = xidx; subsub_xidx < w; subsub_xidx++)
+						{
+							new_edge[subsub_xidx] = y1;
+						}
+						// terminate outer loop by suggesting that we're done
+						xidx = w;
+					} 
+					// deal with case when an edge exists again after a while
+					else
+					{
+						x2 = sub_xidx;
+						y2 = new_edge[sub_xidx];
+			
+						// interpolate between last good position and next good position
+						for (subsub_xidx = x1+1; subsub_xidx < x2; subsub_xidx++)
+						{
+							new_edge[subsub_xidx] = round(((subsub_xidx - x1)/(x2 - x1)) * (y2 - y1));
+						}
+						// get outer loop to skip over section we've just dealt with by updating xidx accordingly
+						xidx = x2 - 1;
+					}
+				}
+			}
+			previous_edge = new_edge;
+			edgesArray = setArrayRow(edgesArray, frames, w, fridx, previous_edge);
+			// draw lines using newly polished edge - could possibly be done in previous loop but more tricky and less clear
+			for (xidx = 1; xidx < w; xidx++)
+			{
+				// set current window to be image that line should be drawn on...
+				selectWindow(image_name + " CROP-1." + file_extension);
+				drawLine(xidx-1, previous_edge[xidx-1], xidx, new_edge[xidx]);
+				
+			}
+			waitForUser("pause to admire line");
+		}
+	}
+
+    //set apical bounds
+	
 	// now crop spatially...
 	run("Enhance Contrast", "saturated=0.35");
 	Stack.setPosition(0, 0, 0);
@@ -222,8 +363,6 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	image_name = image_name[0] + " trimmed and cropped";
 	rename(image_name);
 	saveAs("tiff", output_subfolder + File.separator + image_name);
-
-	//set apical bounds
 
 	// loop over frames in sequence, saving line profiles and storing intensity stats
 	run("Enhance Contrast", "saturated=0.35");
