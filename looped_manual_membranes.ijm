@@ -236,6 +236,8 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 	getDimensions(w, h, channels, slices, frames);
 	for (fridx = 0; fridx < frames + 1; fridx++)
 	{
+		selectWindow("basal_bound.tif");
+		Stack.setPosition(1, 1, fridx+1);
 		if (fridx == 0)
 		{
 			previous_edge = newArray(w);
@@ -330,14 +332,20 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 			previous_edge = new_edge;
 			edgesArray = setArrayRow(edgesArray, frames, w, fridx, previous_edge);
 			// draw lines using newly polished edge - could possibly be done in previous loop but more tricky and less clear
-			for (xidx = 1; xidx < w; xidx++)
+			// for now, only do every 50th image...
+			if ((fridx % 50) == 0)
+			{
+				for (xidx = 1; xidx < w; xidx++)
 			{
 				// set current window to be image that line should be drawn on...
 				selectWindow(image_name + " CROP-1." + file_extension);
+				Stack.setPosition(2, 1, fridx+1);
+				run("Enhance Contrast", "saturated=0.35");
 				drawLine(xidx-1, previous_edge[xidx-1], xidx, new_edge[xidx]);
 				
 			}
 			waitForUser("pause to admire line");
+			}
 		}
 	}
 
