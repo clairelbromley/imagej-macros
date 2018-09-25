@@ -274,7 +274,6 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 				}
 				previous_edge[xidx] = yidx;
 			}
-			edgesArray = setArrayRow(edgesArray, frames, w, fridx, previous_edge);
 		} 
 		else 
 		{
@@ -359,22 +358,22 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 				}
 			}
 			previous_edge = new_edge;
-			edgesArray = setArrayRow(edgesArray, frames, w, fridx, previous_edge);
+			setArrayRow(edgesArray, frames, w, fridx, previous_edge);
 			// draw lines using newly polished edge - could possibly be done in previous loop but more tricky and less clear
 			// for now, only do every 50th image...
-			if ((fridx % 50) == 0)
-			{
-				for (xidx = 1; xidx < w; xidx++)
-			{
+			//if ((fridx % 50) == 0)
+			//{
 				// set current window to be image that line should be drawn on...
-				selectWindow(image_name + " CROP-1." + file_extension);
+				selectWindow(image_name + "-1." + file_extension);
 				Stack.setPosition(2, 1, fridx+1);
 				run("Enhance Contrast", "saturated=0.35");
-				drawLine(xidx-1, previous_edge[xidx-1], xidx, new_edge[xidx]);
-				
-			}
-			waitForUser("pause to admire line");
-			}
+				xs = Array.getSequence(w);
+				makeSelection("freeline", xs, previous_edge);
+				setForegroundColor(0, 255, 0);
+				roiManager("add & draw");
+				//run("Draw", "slice");
+				//waitForUser("pause to admire line");
+			//}
 		}
 	}
 
