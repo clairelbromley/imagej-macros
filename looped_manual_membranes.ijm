@@ -318,17 +318,24 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 			
 					// find next successful edge position
 					sub_xidx = xidx + 1;
-					while ((sub_xidx < w) && new_edge[sub_xidx] == -1)
+					wp = w - 1;
+					if (sub_xidx < wp)
 					{
-						sub_xidx++;
+						while (new_edge[sub_xidx] == -1)
+						{
+							sub_xidx++;
+							if (sub_xidx >= wp)
+							{
+								break;
+							}
+						}
 					}
 					
-			
 					// deal with case when no further good edges positions exist - just continue edge at last
 					// good y position to end of image in x direction
-					if (sub_xidx == w)
+					if (sub_xidx >= wp)
 					{
-						for (subsub_xidx = xidx; subsub_xidx < w; subsub_xidx++)
+						for (subsub_xidx = x1; subsub_xidx < w; subsub_xidx++)
 						{
 							new_edge[subsub_xidx] = y1;
 						}
