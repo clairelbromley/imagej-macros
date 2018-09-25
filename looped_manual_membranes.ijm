@@ -351,7 +351,7 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 						// interpolate between last good position and next good position
 						for (subsub_xidx = x1+1; subsub_xidx < x2; subsub_xidx++)
 						{
-							new_edge[subsub_xidx] = round(((subsub_xidx - x1)/(x2 - x1)) * (y2 - y1));
+							new_edge[subsub_xidx] = round(((subsub_xidx - x1)/(x2 - x1)) * (y2 - y1) +  y1);
 						}
 						// get outer loop to skip over section we've just dealt with by updating xidx accordingly
 						xidx = x2 - 1;
