@@ -17,7 +17,8 @@ from ij import IJ, WindowManager, ImagePlus
 from ij.gui import Roi, PointRoi, PolygonRoi, GenericDialog, WaitForUserDialog
 from ij.io import OpenDialog, DirectoryChooser, FileSaver
 from ij.plugin import ChannelSplitter, Duplicator
-from ij.process import FloatPolygon
+from ij.process import FloatPolygon, ImageConverter
+from ij.plugin.filter import GaussianBlur, ParticleAnalyzer
 from loci.plugins import BF as bf
 
 # searches for chosen file type within selected folder
@@ -43,6 +44,7 @@ def pause_for_debug():
 	gd.showDialog();
 	if gd.wasCanceled():
 		raise Exception("Run interupted");
+		
 def main():
 	#print (sys.version_info) # debug
 	#print(sys.path) # debug
@@ -105,6 +107,34 @@ def main():
 
 		# set basal bounds
 		myo_imp.show();
+		ImageConverter(myo_imp).convertToGray8();
+		frames = myo_imp.getNFrames();	
+		gb = GaussianBlur();
+		for fridx in range(0, frames):
+			myo_imp.setSliceWithoutUpdate(fridx + 1);
+			ip = myo_imp.getProcessor();
+			gb.blurGaussian(ip, 5.0, 1.0, 0.02); # assymmetrical Gaussian
+		IJ.run(myo_imp, "Convert to Mask", "method=Otsu background=Dark calculate");
+		IJ.run("Despeckle", "stack");
+		title = myo_imp.getTitle();
+
+		# perform size and position filtering on thresholded image...
+		IJ.run("Set Measurements...", "centroid stack redirect=None decimal=3");
+		IJ.run(myo_imp, "Analyze Particles...", "size=500-30000 pixel show=Masks display clear stack");
+		particles_imp = WindowManager.getImage(("Mask of " + title));
+		rt = ResultsTable.getResultsTable();
+		particle_slices = rt.getColumn(rt.getColumnsIndex("Slice"));
+		print(particle_slices)
+		frames = particles_imp.getNFrames();	
+		for fridx in range(0, frames):
+			imp.setSliceWithoutUpdate(fridx + 1);
+
+		# after getting rid of incorrectly segmented non-basal myosin, 
+		# perform previous edge search to identify the bottom AND TOP edges of the bright band
+		# then can draw these on the masks, fill holes and have a mask that effectively collects
+		# all basal myosin, as well as a line that delineates the end of the cell
+		
+		
 	
 
 # It's best practice to create a function that contains the code that is executed when running the script.
