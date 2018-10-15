@@ -121,11 +121,16 @@ for (fidx = 0; fidx < filtered_files.length; fidx++)
 
 	if (channels == 2)
 	{
-		red_channel_number1 = 1;
-		red_channel_number2 = 2;
+		red_channel_number1_temp = 1;
+		red_channel_number2_temp = 2;
+	}
+	else
+	{
+		red_channel_number1_temp = red_channel_number1;
+		red_channel_number2_temp = red_channel_number2;
 	}
 
-	combineChannels(file_name, red_channel_name, red_channel_number1, red_channel_number2, slices, frames, output_subfolder);
+	combineChannels(file_name, red_channel_name, red_channel_number1_temp, red_channel_number2_temp, slices, frames, output_subfolder);
 	
 	if (channels > 2)
 	{
