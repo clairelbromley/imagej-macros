@@ -1,5 +1,3 @@
-#todo deal with pan and get pixel-to-micron conversion from image metadata
-
 # @ImagePlus imp
 import math
 from ij import IJ
@@ -10,15 +8,15 @@ y_image_size_pix = 600.0;
 m2 = 3.0;
 m1 = 5.0;
 
-#pixSize3x = 0.24;
+pixSize3x = 0.24;
 
 dialog = GenericDialog("Define 5x ROI parameters...");
-dialog.addNumericField("ROI X position (software coordinates, pixels): ", 182, 0);
-dialog.addNumericField("ROI Y position (software coordinates, pixels): ", 1, 0);
-dialog.addNumericField("ROI width (pixels): ", 544, 0);
-dialog.addNumericField("ROI height (pixels): ", 599, 0);
-dialog.addNumericField("3x ROI X offset pixels: ", 2, 0);
-dialog.addNumericField("3x ROI Y offset pixels: ", 43, 0);
+dialog.addNumericField("ROI X position (software coordinates, pixels): ", 0, 0);
+dialog.addNumericField("ROI Y position (software coordinates, pixels): ", 0, 0);
+dialog.addNumericField("ROI width (pixels): ", 0, 0);
+dialog.addNumericField("ROI height (pixels): ", 0, 0);
+dialog.addNumericField("3x ROI X offset pixels: ", 0, 0);
+dialog.addNumericField("3x ROI Y offset pixels: ", 0, 0);
 dialog.addNumericField("Pan X (um): ", 0, 3);
 dialog.addNumericField("Pan Y (um): ", 0, 3);
 
@@ -62,3 +60,5 @@ imp.setRoi(roi);
 IJ.run(imp, "RGB Color", "");
 IJ.run("Colors...", "foreground=cyan background=white selection=yellow");
 IJ.run("Draw", "stack");
+
+#todo deal with pan and get pixel-to-micron conversion from image metadata
