@@ -35,9 +35,9 @@ pany = dialog.getNextNumber();
 # top left - so need to transfom to central origin coords (with x, y in normal directions)
 ox = x_image_size_pix/2.0;
 oy = y_image_size_pix/2.0;
-xprime = x5x - ox - 0.5;
-yprime = oy - y5x + 0.5;
 pixSize5x = pixSize3x * m1/m2;
+xprime = x5x - ox - 0.5 + panx/pixSize5x;
+yprime = oy - y5x + 0.5 - pany/pixSize5x;
 
 w3x = math.ceil((m2/m1) * w5x);
 h3x = math.ceil((m2/m1) * h5x);
