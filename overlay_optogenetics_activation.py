@@ -8,7 +8,7 @@ y_image_size_pix = 600.0;
 m2 = 3.0;
 m1 = 5.0;
 
-pixSize3x = 0.24;
+pixSize3x = round(imp.getCalibration().pixelHeight, 2);
 
 dialog = GenericDialog("Define 5x ROI parameters...");
 dialog.addNumericField("ROI X position (software coordinates, pixels): ", 0, 0);
