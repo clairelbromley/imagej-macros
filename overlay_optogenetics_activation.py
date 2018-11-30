@@ -1,7 +1,9 @@
 # @ImagePlus imp
 import math
+import os
 from ij import IJ
 from ij.gui import GenericDialog, Roi
+from ij.io import SaveDialog
 
 x_image_size_pix = 800.0;
 y_image_size_pix = 600.0;
@@ -19,6 +21,7 @@ dialog.addNumericField("3x ROI X offset pixels: ", 0, 0);
 dialog.addNumericField("3x ROI Y offset pixels: ", 0, 0);
 dialog.addNumericField("Pan X (um): ", 0, 3);
 dialog.addNumericField("Pan Y (um): ", 0, 3);
+dialog.addNumericField("Frame interval (s): ", 1.0, 2);
 
 dialog.showDialog();
 
@@ -30,6 +33,7 @@ offsetx = dialog.getNextNumber();
 offsety = dialog.getNextNumber();
 panx = dialog.getNextNumber();
 pany = dialog.getNextNumber();
+interval = dialog.getNextNumber();
 
 # zoom occurs around the center of the image, but positions are defined wrt the 
 # top left - so need to transfom to central origin coords (with x, y in normal directions)
@@ -63,4 +67,8 @@ IJ.run(imp, "RGB Color", "");
 IJ.run("Colors...", "foreground=cyan background=white selection=yellow");
 IJ.run("Draw", "stack");
 
-#todo deal with pan and get pixel-to-micron conversion from image metadata
+IJ.run(imp, "Label...", "format=00:00:00 starting=0 interval=" + str(interval) + " x=5 y=20 font=18 text=[] range=1-"+str(imp.getNFrames()));
+
+sd = SaveDialog("Save as AVI...", os.path.splitext(imp.getTitle())[0], ".avi");
+if sd.getFileName is not None:
+	IJ.run(imp, "AVI... ", "compression=None frame=10 save=[" + os.path.join(sd.getDirectory(), sd.getFileName()) + "]");
