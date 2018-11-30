@@ -36,8 +36,10 @@ pany = dialog.getNextNumber();
 ox = x_image_size_pix/2.0;
 oy = y_image_size_pix/2.0;
 pixSize5x = pixSize3x * m1/m2;
-xprime = x5x - ox - 0.5 + panx/pixSize5x;
-yprime = oy - y5x + 0.5 - pany/pixSize5x;
+#xprime = x5x - ox - 0.5 + panx/pixSize5x;
+#yprime = oy - y5x + 0.5 - pany/pixSize5x;
+xprime = x5x - ox - 0.5;
+yprime = oy - y5x + 0.5;
 
 w3x = math.ceil((m2/m1) * w5x);
 h3x = math.ceil((m2/m1) * h5x);
@@ -45,8 +47,8 @@ h3x = math.ceil((m2/m1) * h5x);
 #yprimeum = yprime * pixSize5x + pany;
 #xprimeum = xprime * pixSize5x + panx;
 
-xprime3x = (m2/m1) * xprime;
-yprime3x = (m2/m1) * yprime;
+xprime3x = (m2/m1) * xprime + panx/pixSize3x;
+yprime3x = (m2/m1) * yprime - pany/pixSize3x;
 
 x3x = math.ceil(ox + xprime3x - offsetx + 1);
 y3x = math.ceil(oy - yprime3x - offsety + 1);
