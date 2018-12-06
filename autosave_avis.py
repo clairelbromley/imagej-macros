@@ -7,7 +7,7 @@ from loci.plugins import BF as bf
 
 #----- user parameters -----
 root_folder = "C:\\Users\\dougk\\Desktop\\output";
-output_folder = "C:\\Users\\dougk\\Desktop\\gifs";
+output_folder = "C:\\Users\\dougk\\Desktop\\avis";
 frame_rate_fps = 10;
 additional_scaling_factor = 0.5	# should be between 0 and 1
 #---------------------------
@@ -52,11 +52,12 @@ for subfolder in subfolders:
 		imp = rescale_stack(imp, additional_scaling_factor, subtract_minimum=True);
 		#IJ.run("Enhance Contrast", "saturated=0.35"); 
 		#WaitForUserDialog("Enhance!").show();
-		output_path = os.path.join(output_folder, (os.path.splitext(tiff_file)[0] + " autocontrast gif.gif"));
-		cal = imp.getCalibration();
-		cal.fps = frame_rate_fps;
-		imp.setCalibration(cal);
+		output_path = os.path.join(output_folder, (os.path.splitext(tiff_file)[0] + " autocontrast avi.avi"));
+		IJ.run(imp, "AVI... ", "compression=None frame=" + str(frame_rate_fps) + " save=[" + output_path + "]");
+		#cal = imp.getCalibration();
+		#cal.fps = frame_rate_fps;
+		#imp.setCalibration(cal);
 		print("output_path = " + output_path);
-		IJ.saveAs(imp, "Gif", output_path);
+		#IJ.saveAs(imp, "Gif", output_path);
 		imp.close();
 WaitForUserDialog("DONE!").show();
