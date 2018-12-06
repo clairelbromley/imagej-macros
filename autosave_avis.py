@@ -26,9 +26,9 @@ def rescale_stack(imp, scaling, subtract_minimum=True):
 	multiplier = float(scaling * imp.getProcessor().maxValue())/rng;
 	print("Multiplier = " + str(multiplier));
 	IJ.run(imp, "Multiply...", "value=" + str(multiplier) + " stack");
-	imp.show();
-	WaitForUserDialog("scaled image").show();
-	imp.hide();
+	#imp.show();
+	#WaitForUserDialog("scaled image").show();
+	#imp.hide();
 	return imp;
 
 # make output folder if necessary
@@ -49,8 +49,8 @@ for subfolder in subfolders:
 		imp = bfimp[0];
 		IJ.run(imp, "8-bit", "");
 		#imp.show();
-		#imp = rescale_stack(imp, additional_scaling_factor, subtract_minimum=False);
-		IJ.run("Enhance Contrast", "saturated=0.35"); 
+		imp = rescale_stack(imp, additional_scaling_factor, subtract_minimum=True);
+		#IJ.run("Enhance Contrast", "saturated=0.35"); 
 		#WaitForUserDialog("Enhance!").show();
 		output_path = os.path.join(output_folder, (os.path.splitext(tiff_file)[0] + " autocontrast gif.gif"));
 		cal = imp.getCalibration();
