@@ -3,13 +3,15 @@ from ij import IJ
 from ij.gui import WaitForUserDialog
 from ij.io import FileSaver
 from ij.process import StackStatistics;
+from loci.formats import ImageReader, MetadataTools
 from loci.plugins import BF as bf
+from ome.units import UNITS
 
 #----- user parameters -----
 root_folder = "C:\\Users\\dougk\\Desktop\\output";
 output_folder = "C:\\Users\\dougk\\Desktop\\avis";
 frame_rate_fps = 10;
-additional_scaling_factor = 0.5	# should be between 0 and 1
+additional_scaling_factor = 1	# should be between 0 and 1
 #---------------------------
 
 def rescale_stack(imp, scaling, subtract_minimum=True):
@@ -47,8 +49,35 @@ for subfolder in subfolders:
 		print("input path = "  + image_path);
 		bfimp = bf.openImagePlus(image_path);
 		imp = bfimp[0];
+		
+		reader = ImageReader();
+		ome_meta = MetadataTools.createOMEXMLMetadata();
+		reader.setMetadataStore(ome_meta);
+		reader.setId(image_path);
+		reader.close();
+		if imp.getNFrames() > imp.getNSlices():
+			frame_interval = ome_meta.getPixelsTimeIncrement(0).value();
+			frame_unit = ome_meta.getPixelsTimeIncrement(0).unit().getSymbol();
+		else:
+			z_interval = ome_meta.getPixelsPhysicalSizeZ(0).value();
+			z_unit = ome_meta.getPixelsPhysicalSizeZ(0).unit().getSymbol();
+			print(z_unit);
+			try:
+				str(z_unit);
+			except:
+				z_unit = "um";
+			print(z_unit);
+		
 		IJ.run(imp, "8-bit", "");
 		#imp.show();
+		if imp.getNFrames() > imp.getNSlices():
+			IJ.run(imp, "Label...", "format=0 starting=0 interval=" + str(frame_interval) + 
+					" x=5 y=20 font=18 text=[ " + str(frame_unit)  + 
+					"] range=1-" + str(imp.getNFrames()) + " use_text");
+		else:
+			IJ.run(imp, "Label...", "format=0 starting=0 interval=" + str(z_interval) + 
+					" x=5 y=20 font=18 text=[ " + str(z_unit)  + 
+					"] range=1-" + str(imp.getNSlices()) + " use_text");
 		imp = rescale_stack(imp, additional_scaling_factor, subtract_minimum=True);
 		#IJ.run("Enhance Contrast", "saturated=0.35"); 
 		#WaitForUserDialog("Enhance!").show();
