@@ -4,6 +4,7 @@ import os
 import json
 from ij import IJ
 from ij.gui import GenericDialog, Roi
+from ij.gui import WaitForUserDialog
 from ij.io import SaveDialog
 
 x_image_size_pix = 800.0;
@@ -46,7 +47,7 @@ class ActivationOverlayMetadata:
 
 	def setLowMagOffsetXY(self, xy_tup):
 		"""set offset from (0,0) of cropped low magnification image"""
-		self.setLowMagOffsetXY=xy_tup;
+		self.lowMagRoiOffsetXY=xy_tup;
 
 	def setPanUmXY(self, xy_tup):
 		"""set stage pan that has occured between acquisition of low mag and high mag images"""
