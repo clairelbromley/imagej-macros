@@ -8,10 +8,11 @@ from loci.plugins import BF as bf
 from ome.units import UNITS
 
 #----- user parameters -----
-root_folder = "C:\\Users\\dougk\\Desktop\\output";
-output_folder = "C:\\Users\\dougk\\Desktop\\avis";
-frame_rate_fps = 10;
-additional_scaling_factor = 1	# should be between 0 and 1
+root_folder = "/Users/cib/Documents/Opto/exp79/output";
+output_folder = "/Users/cib/Documents/Opto/exp79/output/test2";
+acquisition_frame_interval_s = 50.0;
+frame_rate_fps = 10; # output movie frame rate
+additional_scaling_factor = 0.3	# should be between 0 and 1
 #---------------------------
 
 def rescale_stack(imp, scaling, subtract_minimum=True):
@@ -56,20 +57,31 @@ for subfolder in subfolders:
 		reader.setId(image_path);
 		reader.close();
 		if imp.getNFrames() > imp.getNSlices():
-			frame_interval = ome_meta.getPixelsTimeIncrement(0).value();
-			frame_unit = ome_meta.getPixelsTimeIncrement(0).unit().getSymbol();
+			try:
+				frame_interval = ome_meta.getPixelsTimeIncrement(0).value();
+				frame_unit = ome_meta.getPixelsTimeIncrement(0).unit().getSymbol();
+			except:
+				frame_interval = acquisition_frame_interval_s;
+				frame_unit = 's';
 		else:
-			z_interval = ome_meta.getPixelsPhysicalSizeZ(0).value();
-			z_unit = ome_meta.getPixelsPhysicalSizeZ(0).unit().getSymbol();
-			print(z_unit);
+			try:
+				z_interval = ome_meta.getPixelsPhysicalSizeZ(0).value();
+				z_unit = ome_meta.getPixelsPhysicalSizeZ(0).unit().getSymbol();
+			except:
+				z_interval = 1.0;
+				z_unit = 'um'
 			try:
 				str(z_unit);
 			except:
 				z_unit = "um";
-			print(z_unit);
 		
 		IJ.run(imp, "8-bit", "");
 		#imp.show();
+		#imp = rescale_stack(imp, additional_scaling_factor, subtract_minimum=True);
+		imp.show();
+		#WaitForUserDialog("prescale").show();
+		IJ.resetMinAndMax();
+		IJ.run("Enhance Contrast", "saturated=0.35");
 		if imp.getNFrames() > imp.getNSlices():
 			IJ.run(imp, "Label...", "format=0 starting=0 interval=" + str(frame_interval) + 
 					" x=5 y=20 font=18 text=[ " + str(frame_unit)  + 
@@ -78,9 +90,7 @@ for subfolder in subfolders:
 			IJ.run(imp, "Label...", "format=0 starting=0 interval=" + str(z_interval) + 
 					" x=5 y=20 font=18 text=[ " + str(z_unit)  + 
 					"] range=1-" + str(imp.getNSlices()) + " use_text");
-		imp = rescale_stack(imp, additional_scaling_factor, subtract_minimum=True);
-		#IJ.run("Enhance Contrast", "saturated=0.35"); 
-		#WaitForUserDialog("Enhance!").show();
+		#WaitForUserDialog("postscale, postlabel").show();
 		output_path = os.path.join(output_folder, (os.path.splitext(tiff_file)[0] + " autocontrast avi.avi"));
 		IJ.run(imp, "AVI... ", "compression=None frame=" + str(frame_rate_fps) + " save=[" + output_path + "]");
 		#cal = imp.getCalibration();
@@ -88,5 +98,6 @@ for subfolder in subfolders:
 		#imp.setCalibration(cal);
 		print("output_path = " + output_path);
 		#IJ.saveAs(imp, "Gif", output_path);
+		imp.changes=False;
 		imp.close();
 WaitForUserDialog("DONE!").show();
