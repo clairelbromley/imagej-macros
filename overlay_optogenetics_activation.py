@@ -1,6 +1,7 @@
 # @ImagePlus imp
 import math
 import os
+import json
 from ij import IJ
 from ij.gui import GenericDialog, Roi
 from ij.io import SaveDialog
@@ -9,6 +10,24 @@ x_image_size_pix = 800.0;
 y_image_size_pix = 600.0;
 m2 = 3.0;
 m1 = 5.0;
+
+class ActivationOverlayMetadata:
+	"""class to handle all the information used to construct overlays"""
+
+	def __init__(self, 
+					roiX=0,
+					roiY=0, 
+					roiW=1,
+					roiH=1,
+					lowMagRoiOffsetX=0,
+					lowMagRoiOffsetY=0,
+					panXUm=0,
+					panYUm=0, 
+					frameIntervalS=1.0):
+		self.roiX=roiX;
+		
+
+
 
 pixSize3x = round(imp.getCalibration().pixelHeight, 2);
 
@@ -40,16 +59,11 @@ interval = dialog.getNextNumber();
 ox = x_image_size_pix/2.0;
 oy = y_image_size_pix/2.0;
 pixSize5x = pixSize3x * m1/m2;
-#xprime = x5x - ox - 0.5 + panx/pixSize5x;
-#yprime = oy - y5x + 0.5 - pany/pixSize5x;
 xprime = x5x - ox - 0.5;
 yprime = oy - y5x + 0.5;
 
 w3x = math.ceil((m2/m1) * w5x);
 h3x = math.ceil((m2/m1) * h5x);
-
-#yprimeum = yprime * pixSize5x + pany;
-#xprimeum = xprime * pixSize5x + panx;
 
 xprime3x = (m2/m1) * xprime + panx/pixSize3x;
 yprime3x = (m2/m1) * yprime - pany/pixSize3x;
@@ -67,8 +81,11 @@ IJ.run(imp, "RGB Color", "");
 IJ.run("Colors...", "foreground=cyan background=white selection=yellow");
 IJ.run("Draw", "stack");
 
-IJ.run(imp, "Label...", "format=00:00:00 starting=0 interval=" + str(interval) + " x=5 y=20 font=18 text=[] range=1-"+str(imp.getNFrames()));
-
 sd = SaveDialog("Save as AVI...", os.path.splitext(imp.getTitle())[0], ".avi");
 if sd.getFileName is not None:
+	IJ.saveAs(imp, "Tiff", os.path.join(sd.getDirectory(), 
+			os.path.splitext(os.path.basename(sd.getFileName()))[0] + " + ROI, no timestamp.tif"));
+	IJ.run(imp, "Label...", "format=00:00:00 starting=0 interval=" + str(interval) + " x=5 y=20 font=18 text=[] range=1-"+str(imp.getNFrames()));
 	IJ.run(imp, "AVI... ", "compression=None frame=10 save=[" + os.path.join(sd.getDirectory(), sd.getFileName()) + "]");
+	IJ.saveAs(imp, "Tiff", os.path.join(sd.getDirectory(), 
+			os.path.splitext(os.path.basename(sd.getFileName()))[0] + " + ROI.tif"));
