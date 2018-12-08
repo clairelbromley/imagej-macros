@@ -81,7 +81,7 @@ class ActivationOverlayMetadata:
 		oy = self.scanImageDimensionsXY[1]/2.0;
 		pixSizeHighM = pixSizeLowM * self.highMagM/self.lowMagM;
 		xprime = self.roiX - ox - 0.5;
-		yprime = self.roiY - y5x + 0.5;
+		yprime = oy - self.roiY + 0.5;
 
 		w3x = math.ceil((self.lowMagM/self.highMagM) * self.roiW);
 		h3x = math.ceil((self.lowMagM/self.highMagM) * self.roiH);
