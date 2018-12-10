@@ -46,7 +46,10 @@ class LineScanOverlayMetadata:
 			print([(loresp1x, loresp1y), (loresp2x,loresp2y)]);
 			return Line(loresp1x, loresp1y, loresp2x, loresp2y);
 		else:
-			return Line(self.p1[0], self.p1[1], self.p2[0], self.p2[1]);
+			return Line(self.p1[0] - self.referenceRoiOffsetXY[0], 
+						self.p1[1] - self.referenceRoiOffsetXY[1], 
+						self.p2[0] - self.referenceRoiOffsetXY[0], 
+						self.p2[1] - self.referenceRoiOffsetXY[1]);
 
 	def parse_xytuple_from_string(tup_str):
 		"""Handle loading string versions of tuples back to integer tuples"""
