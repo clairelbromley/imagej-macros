@@ -62,9 +62,12 @@ class LineScanOverlayMetadata:
 			output=(int(d['x']), int(d['y']));
 		return output;
 
-	def save_to_json(self, file_path):
+	def save_to_json(self, file_path, append=False):
 		try:
-			f = open(file_path, 'w');
+			if append:
+				f = open(file_path, 'a');
+			else:
+				f = open(file_path, 'w');
 			json.dump(self.__dict__, f);
 		finally:
 			f.close();
@@ -92,42 +95,56 @@ class LineScanOverlayMetadata:
 
 
 def main():
-	dialog = GenericDialog("Define 5x ROI parameters...");
-	dialog.addNumericField("Line scan position 1 X, Y: ", 0, 0);
-	dialog.addToSameRow();
-	dialog.addNumericField(", ", 0, 0);
-	dialog.addNumericField("Line scan position 2 X, Y: ", 0, 0);
-	dialog.addToSameRow();
-	dialog.addNumericField(", ", 0, 0);
-	dialog.addNumericField("Reference image crop origin X, Y: ", 0, 0);
-	dialog.addToSameRow();
-	dialog.addNumericField(", ", 0, 0);
-	dialog.addNumericField("Frame interval (s): ", 1.0, 2);
-	
-	dialog.showDialog();
-	
-	p1x = dialog.getNextNumber();
-	p1y = dialog.getNextNumber();
-	p2x = dialog.getNextNumber();
-	p2y = dialog.getNextNumber();
-	offsetx = dialog.getNextNumber();
-	offsety = dialog.getNextNumber();
-	interval = dialog.getNextNumber();
-	linescan_overlay = LineScanOverlayMetadata((p1x,p1y), (p2x,p2y), (offsetx,offsety), interval);
-	#print("p1 = " + str(linescan_overlay.p1));
-	#print("p2 = " + str(linescan_overlay.p2));
-	
-	roi = linescan_overlay.generateOverlayRoi();
-	#print(roi);
-	imp.setRoi(roi);
+	metadatas = [];
+	runagain = True;
+	offsetx = 0;
+	offsety = 0;
+	interval = 50.0;
 	IJ.run(imp, "RGB Color", "");
 	IJ.run("Colors...", "foreground=cyan background=white selection=yellow");
-	IJ.run("Draw", "stack");
+	while runagain:
+		dialog = GenericDialog("Define 5x ROI parameters...");
+		dialog.enableYesNoCancel("Continue and quit", "Continue and add another line");
+		dialog.addNumericField("Line scan position 1 X, Y: ", 0, 0);
+		dialog.addToSameRow();
+		dialog.addNumericField(", ", 0, 0);
+		dialog.addNumericField("Line scan position 2 X, Y: ", 0, 0);
+		dialog.addToSameRow();
+		dialog.addNumericField(", ", 0, 0);
+		dialog.addNumericField("Reference image crop origin X, Y: ", offsetx, 0);
+		dialog.addToSameRow();
+		dialog.addNumericField(", ", offsety, 0);
+		dialog.addNumericField("Frame interval (s): ", interval, 2);
+		
+		dialog.showDialog();
+		
+		p1x = dialog.getNextNumber();
+		p1y = dialog.getNextNumber();
+		p2x = dialog.getNextNumber();
+		p2y = dialog.getNextNumber();
+		offsetx = dialog.getNextNumber();
+		offsety = dialog.getNextNumber();
+		interval = dialog.getNextNumber();
+		linescan_overlay = LineScanOverlayMetadata((p1x,p1y), (p2x,p2y), (offsetx,offsety), interval);
+		metadatas.append(linescan_overlay);
+		roi = linescan_overlay.generateOverlayRoi();
+		imp.setRoi(roi);
+		IJ.run("Draw", "stack");
+
+		if dialog.wasOKed():
+			runagain = False;
+		elif dialog.wasCanceled():
+			return;
 	
 	sd = SaveDialog("Save as AVI...", os.path.splitext(imp.getTitle())[0], "line scan overlay.avi");
 	if sd.getFileName is not None:
-		linescan_overlay.save_to_json(os.path.join(sd.getDirectory(), 
+		metadatas[0].save_to_json(os.path.join(sd.getDirectory(), 
 													   os.path.splitext(os.path.basename(sd.getFileName()))[0] + "line scan metadata.json"));
+		if len(metadatas) > 1: # append: multiple writes=slow, but easiest way based on existing framework
+			for midx in range(1, len(metadatas)):
+				metadatas[midx].save_to_json(os.path.join(sd.getDirectory(), 
+													   os.path.splitext(os.path.basename(sd.getFileName()))[0] + "line scan metadata.json"), 
+											append=True);
 		IJ.saveAs(imp, "Tiff", os.path.join(sd.getDirectory(), 
 				os.path.splitext(os.path.basename(sd.getFileName()))[0] + " + line scan ROI, no timestamp.tif"));
 		IJ.run(imp, "Label...", "format=00:00:00 starting=0 interval=" + str(interval) + " x=5 y=20 font=18 text=[] range=1-"+str(imp.getNFrames()));
