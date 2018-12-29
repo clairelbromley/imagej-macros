@@ -64,21 +64,13 @@ class TimepointsMembranes:
 
 	def addMembrane(self, membrane):
 		"""add a membrane to the collection, or replace if necessary"""
-		print("running TimepointsMembranes.addMembrane for position index = " + str(membrane.positionNumber) + " at timepoint = " + str(self.time_point_s));
 		new_number = membrane.positionNumber;
 		existing_numbers = [mem.positionNumber for mem in self.membranes]
 		if not new_number in existing_numbers:
-			print("adding new membrane...");
 			self.membranes.append(membrane);
-			print("done adding membrane");
-			print("membrane indices in the list are " +  str([mem.positionNumber for mem in self.membranes]))
 		else:
 			# overwrite - ask user if they really want to overwrite? 
-			print("overwriting existing membrane...")
-			print("index to overwrite: ");
-			print(existing_numbers.index(new_number))
 			self.membranes[existing_numbers.index(new_number)] = membrane;
-			print("done overwriting existing membrane");
 
 	def getMembrane(self, number):
 		"""return a membrane corresponding to a given interface index defined in CB diagrams"""
@@ -103,16 +95,12 @@ class UpdateRoiImageListener(ImageListener):
 	def imageUpdated(self, imp):
 		print("image updated");
 		frame = imp.getZ();
-		print("Frame = " + str(frame));
 		roi = imp.getRoi();
 		if roi is not None and not roi.isArea():
 			self.membrane_timepoints_list[self.last_frame - 1].addMembrane(DrawnMembrane(roi, self.current_membrane_index));
 		self.last_frame = frame;
 		this_frames_membrane = self.membrane_timepoints_list[frame - 1].getMembrane(self.current_membrane_index);
-		print("This frame's membrane = " + str(this_frames_membrane));
 		if this_frames_membrane is not None:
-			print("drawing this frame's membrane...")
-			print(this_frames_membrane)
 			imp.setRoi(this_frames_membrane.getRoi());
 		else:
 			imp.killRoi();
