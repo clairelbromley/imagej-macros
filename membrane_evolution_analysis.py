@@ -67,14 +67,10 @@ class TimepointsMembranes:
 		print("running TimepointsMembranes.addMembrane for position index = " + str(membrane.positionNumber) + " at timepoint = " + str(self.time_point_s));
 		new_number = membrane.positionNumber;
 		existing_numbers = [mem.positionNumber for mem in self.membranes]
-		print("existing numbers = " + str(existing_numbers));
 		if not new_number in existing_numbers:
 			print("adding new membrane...");
-			print("... at positionNumber " + str(membrane.positionNumber));
-			print("length of membranes list before addingg is " + str(len(self.membranes)));
 			self.membranes.append(membrane);
 			print("done adding membrane");
-			print("new length of membranes list is " + str(len(self.membranes)));
 			print("membrane indices in the list are " +  str([mem.positionNumber for mem in self.membranes]))
 		else:
 			# overwrite - ask user if they really want to overwrite? 
@@ -107,18 +103,12 @@ class UpdateRoiImageListener(ImageListener):
 		print("UpdateRoiImageListener started");
 
 	def imageUpdated(self, imp):
-		print(imp.getTitle());
 		print("image updated");
 		frame = imp.getZ();
 		print("Frame = " + str(frame));
-		print("Membrane index = " + str(self.current_membrane_index));
 		roi = imp.getRoi();
 		if roi is not None and not roi.isArea():
-			print("adding the current membrane into the membrane list...");
 			self.membrane_timepoints_list[self.last_frame - 1].addMembrane(DrawnMembrane(roi, self.current_membrane_index));
-			print("updated membrane_timepoints_list");
-			print("First frame membrane for index " + str(self.current_membrane_index));
-			print(self.membrane_timepoints_list[0].getMembrane(self.current_membrane_index));
 		self.last_frame = frame;
 		this_frames_membrane = self.membrane_timepoints_list[frame - 1].getMembrane(self.current_membrane_index);
 		print("This frame's membrane = " + str(this_frames_membrane));
@@ -127,7 +117,6 @@ class UpdateRoiImageListener(ImageListener):
 			print(this_frames_membrane)
 			imp.setRoi(this_frames_membrane.getRoi());
 		else:
-			print("currently no membrane for this index, timepoint - killRoi")
 			imp.killRoi();
 
 	def imageOpened(self, imp):
@@ -138,7 +127,6 @@ class UpdateRoiImageListener(ImageListener):
 		imp.removeImageListener(self);
 
 	def getDrawnMembraneTimepointsList(self):
-		print("getting membrane timepoints using UpdateRoiImageListener.getDrawnMembraneTimepointsList")
 		return self.membrane_timepoints_list;
 
 	def setCurrentMembraneIndex(self, index):
@@ -193,11 +181,7 @@ def main():
 	imp.changes = False;
 	imp.close();
 	analysis_imp.show();
-	#print(frames);
 	drawn_membranes = [TimepointsMembranes(t * analysis_frame_step) for t in frames];
-	#print([str(drawn_membrane) for drawn_membrane in drawn_membranes]);
-	#print("drawn_membranes[0] = ");
-	#print(str(drawn_membranes[0]));
 	membranes_listener = UpdateRoiImageListener(drawn_membranes);
 	analysis_imp.addImageListener(membranes_listener);
 
@@ -205,23 +189,17 @@ def main():
 	IJ.setTool("freeline");
 	for membrane_idx in membrane_indices:
 		analysis_imp.killRoi();
-		print("Current membrane index = " + str(membrane_idx))
 		membranes_listener.setCurrentMembraneIndex(membrane_idx);		
-		print("Check current membrane index = " + str(membranes_listener.getCurrentMembraneIndex()));
 		analysis_imp.setZ(1);
 		continue_dlg = WaitForUserDialog("Continue?", "Click OK once all the " + str(membrane_idx) + " membranes have been drawn");
 		continue_dlg.show();
 		membranes_listener.resetLastFrame();
 		roi = analysis_imp.getRoi();
-		membranes_listener.forceAddLastMembrane(analysis_imp, roi);
+		#membranes_listener.forceAddLastMembrane(analysis_imp, roi);
 		membranes_listener.imageUpdated(analysis_imp); # ensure that last membrane is added properly...?
 		
 	print("Finished getting all membranes with indices "  + str(membrane_indices));
 	drawn_membranes = membranes_listener.getDrawnMembraneTimepointsList();
-	#print("Len drawn_membranes= " + str(len(drawn_membranes)));
-	#print("drawn_membranes[0], idx=-1 = ");
-	#print(str(drawn_membranes[0].getMembrane(-1)));
-	#print("drawn_membranes[0], idx=3 = ");
 	print(str(drawn_membranes[0]));
 	print("");
 	print(str(drawn_membranes[1]));
