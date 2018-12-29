@@ -75,8 +75,6 @@ class TimepointsMembranes:
 		else:
 			# overwrite - ask user if they really want to overwrite? 
 			print("overwriting existing membrane...")
-			print("current  membranes:");
-			print(self.membranes);
 			print("index to overwrite: ");
 			print(existing_numbers.index(new_number))
 			self.membranes[existing_numbers.index(new_number)] = membrane;
@@ -189,13 +187,11 @@ def main():
 	IJ.setTool("freeline");
 	for membrane_idx in membrane_indices:
 		analysis_imp.killRoi();
+		membranes_listener.resetLastFrame();
 		membranes_listener.setCurrentMembraneIndex(membrane_idx);		
 		analysis_imp.setZ(1);
 		continue_dlg = WaitForUserDialog("Continue?", "Click OK once all the " + str(membrane_idx) + " membranes have been drawn");
 		continue_dlg.show();
-		membranes_listener.resetLastFrame();
-		roi = analysis_imp.getRoi();
-		#membranes_listener.forceAddLastMembrane(analysis_imp, roi);
 		membranes_listener.imageUpdated(analysis_imp); # ensure that last membrane is added properly...?
 		
 	print("Finished getting all membranes with indices "  + str(membrane_indices));
