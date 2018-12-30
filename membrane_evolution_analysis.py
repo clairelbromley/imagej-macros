@@ -1,7 +1,9 @@
 # @ImagePlus imp
-import math
+import math, csv, json, os
+from datetime import datetime
 from ij import IJ, ImageListener;
 from ij.gui import Line, NonBlockingGenericDialog, GenericDialog, WaitForUserDialog
+from ij.io import DirectoryChooser
 from ij.plugin import SubstackMaker
 
 class DrawnMembrane:
@@ -26,13 +28,14 @@ class DrawnMembrane:
 
 	def getEuclidean(self):
 		"""return the length of the straight line joining start and end points of the membrane"""
-		poly = self.roi.getFloatPolygon();
+		poly = self.roi.getInterpolatedPolygon(1, True);
 		line = Line(poly.xpoints[0], poly.ypoints[0], poly.xpoints[-1], poly.ypoints[-1]);
 		return line.getLength();
 
 	def getPathLength(self):
-		"""return the length of the membrane"""
-		return self.roi.getLength();
+		"""return the length of the membrane - automatically applying 3-point smoothing to account for shaky hands"""
+		poly = self.roi.getInterpolatedPolygon(1, True);
+		return poly.getLength(True);
 
 	def getSinuosity(self):
 		"""return the sinuosity"""
@@ -132,13 +135,26 @@ def main():
 	# for now, work with frontmost open image...
 	imp = IJ.getImage();
 
-	# first, pop up a dialog prompting for selection of zero time point, frame interval, and time step for analysis
+	default_path = "C:\\Users\\Doug\\Desktop"; # update this once Settings class is implemented to allow persistence...
+	timestamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H-%M-%S');
+	DirectoryChooser.setDefaultDirectory(os.path.dirname(default_path));
+	dc = DirectoryChooser('Select the root folder for saving output');
+	output_root = dc.getDirectory();
+	if output_root is None:
+		raise IOError('no output path chosen');
+	
+	# get calibration
+	cal = imp.getCalibration();
+	if cal.getTimeUnit()=="sec":
+		cal.setTimeUnit('s');
+
+	# pop up a dialog prompting for selection of zero time point, frame interval, and time step for analysis
 	time_steps_not_ok = True;
 	while time_steps_not_ok:
 		dialog = NonBlockingGenericDialog("Determine time parameters...");
 		dialog.addNumericField("0 timepoint frame (1-index): ", 1, 0);
-		dialog.addNumericField("Acquisition time step (s): ", imp.getCalibration().frameInterval, 2) # assume stored in seconds
-		dialog.addNumericField("Time step for analysis (s): ", imp.getCalibration().frameInterval, 2);
+		dialog.addNumericField("Acquisition time step (s): ", cal.frameInterval, 2) # assume stored in seconds
+		dialog.addNumericField("Time step for analysis (s): ", cal.frameInterval, 2);
 		dialog.showDialog();
 
 		if dialog.wasCanceled():
@@ -178,22 +194,36 @@ def main():
 		membranes_listener.resetLastFrame();
 		membranes_listener.setCurrentMembraneIndex(membrane_idx);		
 		analysis_imp.setZ(1);
-		continue_dlg = WaitForUserDialog("Continue?", "Click OK once all the " + str(membrane_idx) + " membranes have been drawn");
+		continue_dlg = WaitForUserDialog("Continue?", "Click OK once all the " + str(membrane_idx) + "-index membranes have been drawn");
 		continue_dlg.show();
-		membranes_listener.imageUpdated(analysis_imp); # ensure that last membrane is added properly...?
+		membranes_listener.imageUpdated(analysis_imp);
+		drawn_membranes = membranes_listener.getDrawnMembraneTimepointsList();
+		# TODO: dump json containing currently drawn membranes
+
+		# save csv containing membrane measurements for current membrane index
+		csv_path = os.path.join(output_root, ("Membrane measurements " + timestamp + ".csv"));
+		if membrane_idx==membrane_indices[0]:
+			f = open(csv_path, 'wb');
+			writer = csv.writer(f);
+			writer.writerow(["Membrane index", 
+							("Time point, " + cal.getTimeUnit()), 
+							("Membrane length, " + cal.getUnit()), 
+							("Euclidean length, " + cal.getUnit()), 
+							"Membrane sinuoisty"]);
+			f.close();
+		f = open(csv_path, 'ab')
+		writer = csv.writer(f);
+		for mems in drawn_membranes:
+			mem = mems.getMembrane(membrane_idx);
+			if mem is not None:
+				writer.writerow([membrane_idx, 
+								mems.time_point_s,
+								mem.getPathLength() * cal.pixelWidth, 
+								mem.getEuclidean() * cal.pixelWidth, 
+								mem.getSinuosity()]);
+		f.close();
 		
 	print("Finished getting all membranes with indices "  + str(membrane_indices));
-	drawn_membranes = membranes_listener.getDrawnMembraneTimepointsList();
-	print(str(drawn_membranes[0]));
-	print("");
-	print(str(drawn_membranes[1]));
-	print("");
-	print(str(drawn_membranes[2]));
-	print("");
-	print(str(drawn_membranes[-1]));
-
-	# then do same for each of N other membranes
-	# do final calculation and data saving
 
 # It's best practice to create a function that contains the code that is executed when running the script.
 # This enables us to stop the script by just calling return.
