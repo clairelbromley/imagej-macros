@@ -5,6 +5,7 @@ from ij.gui import Line, NonBlockingGenericDialog, GenericDialog, WaitForUserDia
 from ij.io import DirectoryChooser
 from ij.plugin import SubstackMaker
 
+
 class DrawnMembrane:
 	"""class for manually-drawn membranes"""
 	
@@ -40,17 +41,12 @@ class DrawnMembrane:
 		"""return the sinuosity"""
 		return self.getPathLength()/self.getEuclidean() - 1;
 
-	#def __str__(self):
-	#	"""return string representation including roi's points, for json saving"""
-	#	poly = self.roi.getFloatPolygon();
-	#	return ("Membrane " + str(self.positionNumber) + ", points = [\n" 
-	#			+ str([(x,y) for x,y in zip(poly.xpoints, poly.ypoints)]) + "\n]");
-
-#	def parse_from_str(self, string):
-#		"""from a string representation, populate a DrawnMembrane object"""
-#		import re;
-#		fmt_str = "Membrane (?P<number>\d+)"
-
+	def __str__(self):
+		"""return string representation including roi's points"""
+		poly = self.roi.getFloatPolygon();
+		return ("Membrane " + str(self.positionNumber) + ", points = [\n" 
+				+ str([(x,y) for x,y in zip(poly.xpoints, poly.ypoints)]) + "\n]");
+				
 class TimepointsMembranes:
 	"""class for holding all the drawn membranes for one timepoint"""
 
@@ -81,10 +77,10 @@ class TimepointsMembranes:
 		else:
 			return None;
 
-	#def __str__(self):
-	#	"""return string representation including roi's points, for json saving"""
-	#	return ("Time point " + str(self.time_point_s) + " s, membranes: \n " + 	
-	#			str([str(membrane) for membrane in self.membranes]));
+	def __str__(self):
+		"""return string representation including roi's points"""
+		return ("Time point " + str(self.time_point_s) + " s, membranes: \n " + 	
+				str([str(membrane) for membrane in self.membranes]));
 
 class UpdateRoiImageListener(ImageListener):
 	"""class to support updating ROI from list upon change of frame"""
@@ -126,16 +122,18 @@ class UpdateRoiImageListener(ImageListener):
 	def resetLastFrame(self):
 		self.last_frame = 1;
 
-def encode_membrane(z):
-	"""function to handle encoding to JSON. make more OO?"""
-	if isinstance(z, DrawnMembrane):
-		return {'position number': z.positionNumber, 'roi' : [(x, y) for x, y in zip(z.roi.getFloatPolygon().xpoints, z.roi.getFloatPolygon().ypoints)]};
+def encode_membrane(obj):
+	"""specify encoding of drawn membranes to JSON"""
+	if isinstance(obj, DrawnMembrane):
+		if obj.roi is not None:
+			return {'position number': obj.positionNumber, 'roi' : [(x, y) for x, y in zip(obj.roi.getFloatPolygon().xpoints, obj.roi.getFloatPolygon().ypoints)]};
+		else:
+			return {'position number': obj.positionNumber, 'roi': None};
 	else:
 		try:
-			return z.__dict__;
+			return obj.__dict__;
 		except:
-			type_name = z.__class__.__name__
-			raise TypeError("Object of type " + type_name + " is not JSON serializable");
+			raise TypeError("Object of type " + obj.__class__.__name__ + " is not JSON serializable");
 
 def main():
 	# define here which membrane indices will be used in the analysis, with last index the "control" index
@@ -208,12 +206,10 @@ def main():
 		continue_dlg.show();
 		membranes_listener.imageUpdated(analysis_imp);
 		drawn_membranes = membranes_listener.getDrawnMembraneTimepointsList();
-		# TODO: dump json containing currently drawn membranes
 		json_path = os.path.join(output_root, "Membranes " + timestamp + ".json");
-		print(drawn_membranes.__class__.__name__);
-		print(drawn_membranes[0].__class__.__name__);
-		print(drawn_membranes[0])
+		f = open(json_path, 'w+');
 		json.dump(drawn_membranes, f, default=encode_membrane);
+		f.close();
 		# save csv containing mebrane measurements for current membrane index
 		csv_path = os.path.join(output_root, ("Membrane measurements " + timestamp + ".csv"));
 		if membrane_idx==membrane_indices[0]:
