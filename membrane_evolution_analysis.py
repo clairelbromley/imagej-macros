@@ -5,7 +5,54 @@ from ij.gui import Line, NonBlockingGenericDialog, GenericDialog, WaitForUserDia
 from ij.io import DirectoryChooser
 from ij.plugin import SubstackMaker
 
+class MembraneEvolutionAnalysisSettings:
+	"""class to hold settings and allow persistence between instances"""
+	
+	def __init__(self, output_path="", zero_timepoint_frame=1, analysis_frame_step=1):
+		self.output_path = output_path;
+		self.zero_timepoint_frame =zero_timepoint_frame;
+		self.analysis_frame_step = analysis_frame_step;
+		self.__isMembraneEvolutionAnalysisSettings__ = True;
 
+	def persistSettings(self):
+		"""save settings to appdata folder (or equivalent)"""
+		settings_path = self.getPersistenceFilePath();
+		try:
+			f = open(settings_path, "wb+");
+			json.dump(self.__dict__, f);
+		finally:
+			f.close();		
+
+	def loadPersistedSettings(self):
+		"""load settings from appdata folder (or equivalent)"""
+		settings_path = self.getPersistenceFilePath();
+		err_str = "Settings file loaded successfully";
+		if os.path.isfile(settings_path):
+			try:
+				f = open(settings_path, 'r');
+				dct = json.loads(f.read());
+				if "__isMembraneEvolutionAnalysisSettings__" in dct:
+					self.output_path = dct["output_path"];
+					self.analysis_frame_step = int(dct["analysis_frame_step"]);	
+					self.zero_timepoint_frame = int(dct["zero_timepoint_frame"]);
+				else:
+					err_str = "Previous settings file doesn't contain properly configured settings! If this problem persists, contact the developer. Using default settings...";
+			except Exception as e:
+				print("Warning: error loading previous settings...");
+				raise e;
+		else:
+			err_str = "Previous settings file doesn't exist. Using default settings...";
+		print(err_str);
+
+	def getPersistenceFilePath(self):
+		settings_file_name = "MembraneEvolutionAnalysisSettings.json";
+		if not IJ.isMacintosh() and not IJ.isLinux():
+			# windows
+			settings_path = os.path.join(os.getenv('APPDATA'), settings_file_name);
+		else:
+			settings_path = os.path.join(os.path.expanduser("~"), "Library", settings_file_name);
+		return settings_path;
+		
 class DrawnMembrane:
 	"""class for manually-drawn membranes"""
 	
@@ -50,9 +97,10 @@ class DrawnMembrane:
 class TimepointsMembranes:
 	"""class for holding all the drawn membranes for one timepoint"""
 
-	def __init__(self, time_point_s=0, init_membrane=None):
-		self.membranes=[];
-		self.time_point_s=time_point_s;
+	def __init__(self, input_image_title=None, time_point_s=0, init_membrane=None):
+		self.membranes = [];
+		self.input_image_title = input_image_title;
+		self.time_point_s = time_point_s;
 		if init_membrane is not None:
 			self.membranes.append(init_membrane);
 
@@ -142,14 +190,17 @@ def main():
 
 	# for now, work with frontmost open image...
 	imp = IJ.getImage();
+	im_title = imp.getTitle();
+	settings = MembraneEvolutionAnalysisSettings();
+	settings.loadPersistedSettings();
 
-	default_path = "C:\\Users\\Doug\\Desktop"; # update this once Settings class is implemented to allow persistence...
 	timestamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H-%M-%S');
-	DirectoryChooser.setDefaultDirectory(os.path.dirname(default_path));
+	DirectoryChooser.setDefaultDirectory((settings.output_path));
 	dc = DirectoryChooser('Select the root folder for saving output');
 	output_root = dc.getDirectory();
 	if output_root is None:
 		raise IOError('no output path chosen');
+	settings.output_path = output_root;
 	
 	# get calibration
 	cal = imp.getCalibration();
@@ -160,9 +211,9 @@ def main():
 	time_steps_not_ok = True;
 	while time_steps_not_ok:
 		dialog = NonBlockingGenericDialog("Determine time parameters...");
-		dialog.addNumericField("0 timepoint frame (1-index): ", 1, 0);
+		dialog.addNumericField("0 timepoint frame (1-index): ", settings.zero_timepoint_frame, 0);
 		dialog.addNumericField("Acquisition time step (s): ", cal.frameInterval, 2) # assume stored in seconds
-		dialog.addNumericField("Time step for analysis (s): ", cal.frameInterval, 2);
+		dialog.addNumericField("Time step for analysis (s): ", cal.frameInterval * settings.analysis_frame_step, 2);
 		dialog.showDialog();
 
 		if dialog.wasCanceled():
@@ -175,6 +226,8 @@ def main():
 
 		if round(analysis_frame_step) == analysis_frame_step:
 			time_steps_not_ok = False;
+			settings.zero_timepoint_frame = zero_f;
+			settings.analysis_frame_step = analysis_frame_step;
 		else:
 			warning_dlg = GenericDialog("Error!");
 			warning_dlg.addMessage("Analysis time step must be an integer multiple of acquisition time steps!");
@@ -191,7 +244,7 @@ def main():
 	imp.changes = False;
 	imp.close();
 	analysis_imp.show();
-	drawn_membranes = [TimepointsMembranes(t * analysis_frame_step) for t in frames];
+	drawn_membranes = [TimepointsMembranes(input_image_title=im_title, time_point_s=t * analysis_frame_step) for t in frames];
 	membranes_listener = UpdateRoiImageListener(drawn_membranes);
 	analysis_imp.addImageListener(membranes_listener);
 
@@ -207,32 +260,39 @@ def main():
 		membranes_listener.imageUpdated(analysis_imp);
 		drawn_membranes = membranes_listener.getDrawnMembraneTimepointsList();
 		json_path = os.path.join(output_root, "Membranes " + timestamp + ".json");
-		f = open(json_path, 'w+');
-		json.dump(drawn_membranes, f, default=encode_membrane);
-		f.close();
+		try:
+			f = open(json_path, 'w+');
+			json.dump(drawn_membranes, f, default=encode_membrane);
+		finally:
+			f.close();
 		# save csv containing mebrane measurements for current membrane index
 		csv_path = os.path.join(output_root, ("Membrane measurements " + timestamp + ".csv"));
 		if membrane_idx==membrane_indices[0]:
-			f = open(csv_path, 'wb');
+			try:
+				f = open(csv_path, 'wb');
+				writer = csv.writer(f);
+				writer.writerow(["Membrane index", 
+								("Time point, " + cal.getTimeUnit()), 
+								("Membrane length, " + cal.getUnit()), 
+								("Euclidean length, " + cal.getUnit()), 
+								"Membrane sinuoisty"]);
+			finally:
+				f.close();
+		try:
+			f = open(csv_path, 'ab')
 			writer = csv.writer(f);
-			writer.writerow(["Membrane index", 
-							("Time point, " + cal.getTimeUnit()), 
-							("Membrane length, " + cal.getUnit()), 
-							("Euclidean length, " + cal.getUnit()), 
-							"Membrane sinuoisty"]);
+			for mems in drawn_membranes:
+				mem = mems.getMembrane(membrane_idx);
+				if mem is not None:
+					writer.writerow([membrane_idx, 
+									mems.time_point_s,
+									mem.getPathLength() * cal.pixelWidth, 
+									mem.getEuclidean() * cal.pixelWidth, 
+									mem.getSinuosity()]);
+		finally:
 			f.close();
-		f = open(csv_path, 'ab')
-		writer = csv.writer(f);
-		for mems in drawn_membranes:
-			mem = mems.getMembrane(membrane_idx);
-			if mem is not None:
-				writer.writerow([membrane_idx, 
-								mems.time_point_s,
-								mem.getPathLength() * cal.pixelWidth, 
-								mem.getEuclidean() * cal.pixelWidth, 
-								mem.getSinuosity()]);
-		f.close();
 		
+	settings.persistSettings();
 	print("Finished getting all membranes with indices "  + str(membrane_indices));
 
 # It's best practice to create a function that contains the code that is executed when running the script.
