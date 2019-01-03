@@ -185,8 +185,7 @@ def encode_membrane(obj):
 
 def main():
 	# define here which membrane indices will be used in the analysis, with last index the "control" index
-	#membrane_indices = [-1, 0, 1, 3];
-	membrane_indices = [-1, 3];
+	membrane_indices = [-1, 0, 1, 3];
 
 	# for now, work with frontmost open image...
 	imp = IJ.getImage();
