@@ -221,16 +221,18 @@ def main():
 		zero_f = dialog.getNextNumber();
 		acq_t_step = dialog.getNextNumber();
 		analysis_t_step = dialog.getNextNumber();
-		analysis_frame_step = analysis_t_step/acq_t_step;
+		if acq_t_step!=0 and analysis_t_step!=0:
+			analysis_frame_step = analysis_t_step/acq_t_step;
 
-		if round(analysis_frame_step) == analysis_frame_step:
-			time_steps_not_ok = False;
-			settings.zero_timepoint_frame = zero_f;
-			settings.analysis_frame_step = analysis_frame_step;
-		else:
+			if round(analysis_frame_step) == analysis_frame_step:
+				time_steps_not_ok = False;
+				settings.zero_timepoint_frame = zero_f;
+				settings.analysis_frame_step = analysis_frame_step;
+		if time_steps_not_ok:
 			warning_dlg = GenericDialog("Error!");
-			warning_dlg.addMessage("Analysis time step must be an integer multiple of acquisition time steps!");
+			warning_dlg.addMessage("Analysis time step must be an integer multiple of acquisition time steps, and neither should be zero!!");
 			warning_dlg.setOKLabel("Try again...");
+			warning_dlg.showDialog();
 
 			if warning_dlg.wasCanceled():
 				return;
