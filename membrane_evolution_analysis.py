@@ -14,14 +14,20 @@ class MembraneEvolutionAnalysisSettings:
 		self.analysis_frame_step = analysis_frame_step;
 		self.__isMembraneEvolutionAnalysisSettings__ = True;
 
-	def persistSettings(self):
-		"""save settings to appdata folder (or equivalent)"""
-		settings_path = self.getPersistenceFilePath();
+	def save_settings(self, settings_path=None):
+		"""save settings to arbitrary location"""
+		if settings_path is None:
+			settings_path = self.output_path;
 		try:
 			f = open(settings_path, "wb+");
 			json.dump(self.__dict__, f);
 		finally:
-			f.close();		
+			f.close();	
+
+	def persistSettings(self):
+		"""save settings to appdata folder (or equivalent)"""
+		settings_path = self.getPersistenceFilePath();
+		self.save_settings(settings_path=settings_path)	;
 
 	def loadPersistedSettings(self):
 		"""load settings from appdata folder (or equivalent)"""
@@ -261,8 +267,8 @@ def main():
 		membranes_listener.imageUpdated(analysis_imp);
 		drawn_membranes = membranes_listener.getDrawnMembraneTimepointsList();
 		json_path = os.path.join(output_root, "Membranes " + timestamp + ".json");
+		f = open(json_path, 'w+');
 		try:
-			f = open(json_path, 'w+');
 			json.dump(drawn_membranes, f, default=encode_membrane);
 		finally:
 			f.close();
@@ -294,6 +300,7 @@ def main():
 			f.close();
 		
 	settings.persistSettings();
+	settings.save_settings();
 	print("Finished getting all membranes with indices "  + str(membrane_indices));
 
 # It's best practice to create a function that contains the code that is executed when running the script.
