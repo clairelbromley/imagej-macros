@@ -19,7 +19,7 @@ class MembraneEvolutionAnalysisSettings:
 	def save_settings(self, settings_path=None):
 		"""save settings to arbitrary location"""
 		if settings_path is None:
-			settings_path = os.path.join(self.output_path, settings_file_name);
+			settings_path = os.path.join(self.output_path, self.settings_file_name);
 		try:
 			f = open(settings_path, "wb+");
 			json.dump(self.__dict__, f);
