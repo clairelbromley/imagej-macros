@@ -10,10 +10,11 @@ class MembraneEvolutionAnalysisSettings:
 	
 	settings_file_name = "MembraneEvolutionAnalysisSettings.json"
 
-	def __init__(self, output_path="", zero_timepoint_frame=1, analysis_frame_step=1):
+	def __init__(self, output_path="", zero_timepoint_frame=1, analysis_frame_step=1, membrane_indices=[-1,0,1,3]):
 		self.output_path = output_path;
 		self.zero_timepoint_frame =zero_timepoint_frame;
 		self.analysis_frame_step = analysis_frame_step;
+		self.membrane_indices = membrane_indices;
 		self.__isMembraneEvolutionAnalysisSettings__ = True;
 
 	def save_settings(self, settings_path=None):
@@ -197,7 +198,7 @@ def main():
 	# for now, work with frontmost open image...
 	imp = IJ.getImage();
 	im_title = imp.getTitle();
-	settings = MembraneEvolutionAnalysisSettings();
+	settings = MembraneEvolutionAnalysisSettings(membrane_indices=membrane_indices);
 	settings.loadPersistedSettings();
 
 	timestamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H-%M-%S');
