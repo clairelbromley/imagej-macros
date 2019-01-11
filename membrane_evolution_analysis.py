@@ -8,6 +8,8 @@ from ij.plugin import SubstackMaker
 class MembraneEvolutionAnalysisSettings:
 	"""class to hold settings and allow persistence between instances"""
 	
+	settings_file_name = "MembraneEvolutionAnalysisSettings.json"
+
 	def __init__(self, output_path="", zero_timepoint_frame=1, analysis_frame_step=1):
 		self.output_path = output_path;
 		self.zero_timepoint_frame =zero_timepoint_frame;
@@ -17,7 +19,7 @@ class MembraneEvolutionAnalysisSettings:
 	def save_settings(self, settings_path=None):
 		"""save settings to arbitrary location"""
 		if settings_path is None:
-			settings_path = self.output_path;
+			settings_path = os.path.join(self.output_path, settings_file_name);
 		try:
 			f = open(settings_path, "wb+");
 			json.dump(self.__dict__, f);
@@ -51,7 +53,6 @@ class MembraneEvolutionAnalysisSettings:
 		print(err_str);
 
 	def getPersistenceFilePath(self):
-		settings_file_name = "MembraneEvolutionAnalysisSettings.json";
 		if not IJ.isMacintosh() and not IJ.isLinux():
 			# windows
 			settings_path = os.path.join(os.getenv('APPDATA'), settings_file_name);
