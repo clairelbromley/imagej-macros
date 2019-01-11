@@ -56,9 +56,9 @@ class MembraneEvolutionAnalysisSettings:
 	def getPersistenceFilePath(self):
 		if not IJ.isMacintosh() and not IJ.isLinux():
 			# windows
-			settings_path = os.path.join(os.getenv('APPDATA'), settings_file_name);
+			settings_path = os.path.join(os.getenv('APPDATA'), self.settings_file_name);
 		else:
-			settings_path = os.path.join(os.path.expanduser("~"), "Library", settings_file_name);
+			settings_path = os.path.join(os.path.expanduser("~"), "Library", self.settings_file_name);
 		return settings_path;
 		
 class DrawnMembrane:
