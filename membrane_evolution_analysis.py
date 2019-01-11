@@ -304,6 +304,7 @@ def main():
 	settings.persistSettings();
 	settings.save_settings();
 	print("Finished getting all membranes with indices "  + str(membrane_indices));
+	analysis_imp.close();
 
 # It's best practice to create a function that contains the code that is executed when running the script.
 # This enables us to stop the script by just calling return.
