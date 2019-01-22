@@ -248,18 +248,21 @@ def main():
 	start_frame = int(((zero_f - 1) % analysis_frame_step) + 1);
 	end_frame = int(imp.getNFrames() - (imp.getNFrames() - zero_f) % analysis_frame_step);
 	frames = [f + 1 for f in range(start_frame-1, end_frame, int(analysis_frame_step))];
+	print("frames = " + str(frames));
 	imp.killRoi();
 	analysis_imp = SubstackMaker().makeSubstack(imp, str(start_frame) + "-" + str(end_frame) + "-" + str(int(analysis_frame_step)));
 	imp.changes = False;
 	imp.close();
 	analysis_imp.show();
-	drawn_membranes = [TimepointsMembranes(input_image_title=im_title, time_point_s=t * analysis_frame_step) for t in frames];
+	drawn_membranes = [TimepointsMembranes(input_image_title=im_title, time_point_s=(t - 1) * acq_t_step) for t in frames];
 	membranes_listener = UpdateRoiImageListener(drawn_membranes);
 	analysis_imp.addImageListener(membranes_listener);
 
 	# now attach roi listener to store all 0th membranes after showing a waitforuserdialog to prompt continuation
 	IJ.setTool("freeline");
 	for membrane_idx in membrane_indices:
+#		if membrane_idx>50:
+#			IJ.setTool("line");
 		analysis_imp.killRoi();
 		membranes_listener.resetLastFrame();
 		membranes_listener.setCurrentMembraneIndex(membrane_idx);		
