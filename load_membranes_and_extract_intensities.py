@@ -3,9 +3,13 @@
 import json, os, csv
 from ij import IJ
 from ij.gui import WaitForUserDialog, PolygonRoi, Roi
+from ij.io import OpenDialog
 
 line_width = 1;
-edges_file_path = "C:\\Users\\dougk\\Desktop\\Membranes 2019-01-11 15-24-07.json";
+default_edges_path = "C:\\Users\\dougk\\Desktop\\Membranes 2019-01-11 15-24-07.json";
+od = OpenDialog('Select the edges file from previous analysis...', os.path.dirname(default_edges_path), os.path.basename(default_edges_path))
+edges_file_path = od.getPath();
+print(edges_file_path);
 settings_file_name = "MembraneEvolutionAnalysisSettings.json";
 # assume settings file and edges file are in the same directory...
 settings_file_path = os.path.join(os.path.dirname(edges_file_path), settings_file_name);
